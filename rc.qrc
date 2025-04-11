@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/LogReg">
+        <file>res/logo.png</file>
+        <file>style/stylesheet.qss</file>
+    </qresource>
+</RCC>

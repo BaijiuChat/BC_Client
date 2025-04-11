@@ -1,0 +1,10 @@
+QDialog#LoginDialog, #RegisterDialog{
+    background-color:rgb(242, 239, 251)
+}
+
+#tip[state='normal']{
+    color:green;
+}
+#tip[state='error']{
+    color:red;
+}

@@ -49,7 +49,7 @@ void RegisterDialog::on_getButton_clicked()
         json_obj["email"] = email;
         HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix + "/get_verifycode"),
                                             json_obj, ReqId::ID_GET_VERIFY_CODE, Modules::REGISTERMOD);
-        showTip(tr("发送成功！请注意查收"),true);
+        showTip(tr("正在发送邮件中..."),false);
     }else{
         showTip(tr("邮箱地址格式不正确"),false);  // tr用于多语言支持
     }

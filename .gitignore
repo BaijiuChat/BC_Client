@@ -1,54 +1,69 @@
-# C++ objects and libs
-*.slo
-*.lo
-*.o
-*.a
-*.la
-*.lai
-*.so
-*.so.*
-*.dll
-*.dylib
-
-# Qt-es
-object_script.*.Release
-object_script.*.Debug
-*_plugin_import.cpp
+# ------ 编译生成文件 ------
+# Qt 构建目录（自动识别 Debug/Release）
+[bB]uild*/
+[Dd]ebug/
+[Rr]elease/
+*.qmake.stash
 /.qmake.cache
 /.qmake.stash
-*.pro.user
-*.pro.user.*
-*.qbs.user
-*.qbs.user.*
-*.moc
-moc_*.cpp
-moc_*.h
-qrc_*.cpp
-ui_*.h
-*.qmlc
-*.jsc
-Makefile*
-*build-*
 *.qm
 *.prl
-
-# Qt unit tests
+Makefile*
+*build-*
+object_script.*.Release
+object_script.*.Debug
 target_wrapper.*
 
-# QtCreator
-*.autosave
-
-# QtCreator Qml
+# ------ Qt 项目文件 ------
+# Qt Creator 用户配置（含版本号）
+*.pro.user
+*.pro.user.*
+*creator.user*
+*.qbs.user
+*.qbs.user.*
 *.qmlproject.user
 *.qmlproject.user.*
 
-# QtCreator CMake
-CMakeLists.txt.user*
+# ------ 自动生成代码 ------
+# MOC/QRC/UI 生成文件
+moc_*.cpp
+moc_*.h
+*.moc
+qrc_*.cpp
+*_qmlcache.qrc
+ui_*.h
+*_plugin_import.cpp
+*.qmlc
+*.jsc
 
-# QtCreator 4.8< compilation database
+# ------ 二进制和库文件 ------
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+*.slo
+*.lo
+*.lai
+*.la
+
+# ------ IDE 特定文件 ------
+# Qt Creator
+*.autosave
+.qtc_clangd/
+CMakeLists.txt.user*
 compile_commands.json
 
-# QtCreator local machine specific files for imported projects
-*creator.user*
+# VS/VSCode
+.vscode/
+.idea/
 
-*_qmlcache.qrc
+# ------ 其他 ------
+# 临时文件
+*~
+*.bak
+*.tmp

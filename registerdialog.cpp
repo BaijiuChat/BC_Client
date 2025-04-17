@@ -70,8 +70,17 @@ void RegisterDialog::initHttpHandlers()
         qDebug() << "email是" << email;
     });
 
-    // 可以继续注册其他请求类型的处理逻辑
-    // _handlers.insert(ReqId::ID_REG_USER, [this](QJsonObject jsonObj) {...});
+    //注册注册用户回包逻辑
+    _handlers.insert(ReqId::ID_REG_USER, [this](QJsonObject jsonObj){
+        int error = jsonObj["error"].toInt();
+        if(error != ErrorCodes::SUCCESS){
+            showTip(tr("参数错误"),false);
+            return;
+        }
+        auto email = jsonObj["email"].toString();
+        showTip(tr("用户注册成功"), true);
+        qDebug()<< "email is " << email ;
+    });
 }
 
 void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
@@ -94,5 +103,48 @@ void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
 
     _handlers[id](jsonDoc.object()); // 执行处理函数
     return;
+}
+
+
+void RegisterDialog::on_registerButton_clicked()
+{
+    if(ui->userLineEdit->text() == ""){
+        showTip(tr("用户名不能为空"), false);
+        return;
+    }
+
+    if(ui->emailLineEdit->text() == ""){
+        showTip(tr("邮箱不能为空"), false);
+        return;
+    }
+
+    if(ui->pwdLineEdit->text() == ""){
+        showTip(tr("密码不能为空"), false);
+        return;
+    }
+
+    if(ui->confirmLineEdit->text() == ""){
+        showTip(tr("确认密码不能为空"), false);
+        return;
+    }
+
+    if(ui->confirmLineEdit->text() != ui->pwdLineEdit->text()){
+        showTip(tr("密码和确认密码不匹配"), false);
+        return;
+    }
+
+    if(ui->codeLineEdit->text() == ""){
+        showTip(tr("验证码不能为空"), false);
+        return;
+    }
+
+    QJsonObject json_obj;
+    json_obj["user"] = ui->userLineEdit->text();
+    json_obj["email"] = ui->emailLineEdit->text();
+    json_obj["passwd"] = ui->pwdLineEdit->text();
+    json_obj["confirm"] = ui->confirmLineEdit->text();
+    json_obj["verifycode"] = ui->codeLineEdit->text();
+    HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix+"/user_register"),
+                                        json_obj, ReqId::ID_REG_USER,Modules::REGISTERMOD);
 }
 

@@ -301,7 +301,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="getButton">
+        <widget class="TimerBtn" name="getButton">
          <property name="minimumSize">
           <size>
            <width>75</width>
@@ -409,6 +409,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TimerBtn</class>
+   <extends>QPushButton</extends>
+   <header>timerbtn.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -18,6 +18,27 @@ RegisterDialog::RegisterDialog(QWidget *parent)
     connect(HttpMgr::GetInstance().get(), &HttpMgr::sig_reg_mod_finish, this, &RegisterDialog::slot_reg_mod_finish); // .get()用于获得HttpMgr指针
 
     initHttpHandlers();
+
+    ui->tip->clear();
+    connect(ui->userLineEdit, &QLineEdit::editingFinished, this, [this](){
+        checkUserValid();
+    });
+
+    connect(ui->emailLineEdit, &QLineEdit::editingFinished, this, [this](){
+        checkEmailValid();
+    });
+
+    connect(ui->pwdLineEdit, &QLineEdit::editingFinished, this, [this](){
+        checkPwdValid();
+    });
+
+    connect(ui->confirmLineEdit, &QLineEdit::editingFinished, this, [this](){
+        checkConfirmValid();
+    });
+
+    connect(ui->codeLineEdit, &QLineEdit::editingFinished, this, [this](){
+        checkCodeValid();
+    });
 }
 
 RegisterDialog::~RegisterDialog()
@@ -83,6 +104,27 @@ void RegisterDialog::initHttpHandlers()
     });
 }
 
+void RegisterDialog::AddTipErr(TipErr te, QString tips)
+{
+    _tip_errs[te] = tips;
+    showTip(tips, false);
+}
+
+void RegisterDialog::DelTipErr(TipErr te)
+{
+    _tip_errs.remove(te);
+    if(_tip_errs.empty()){
+        ui->tip->setText("完成你的注册...");
+        return;
+    }
+    showTip(_tip_errs.first(), false);
+}
+
+bool RegisterDialog::checkUserValid()
+{
+
+}
+
 void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
 {
     if(err != ErrorCodes::SUCCESS){
@@ -141,8 +183,8 @@ void RegisterDialog::on_registerButton_clicked()
     QJsonObject json_obj;
     json_obj["user"] = ui->userLineEdit->text();
     json_obj["email"] = ui->emailLineEdit->text();
-    json_obj["passwd"] = ui->pwdLineEdit->text();
-    json_obj["confirm"] = ui->confirmLineEdit->text();
+    json_obj["passwd"] = xorString(ui->pwdLineEdit->text());
+    json_obj["confirm"] = xorString(ui->confirmLineEdit->text());
     json_obj["verifycode"] = ui->codeLineEdit->text();
     HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix+"/user_register"),
                                         json_obj, ReqId::ID_REG_USER,Modules::REGISTERMOD);

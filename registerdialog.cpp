@@ -19,6 +19,27 @@ RegisterDialog::RegisterDialog(QWidget *parent)
 
     initHttpHandlers();
 
+    togglePwdAction = new QAction(this);
+    ui->pwdLineEdit->setStyleSheet("QLineEdit:hover { cursor: PointingHandCursor; }");
+    togglePwdAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));
+    ui->pwdLineEdit->addAction(togglePwdAction, QLineEdit::TrailingPosition);
+    connect(togglePwdAction, &QAction::triggered, [=]() {
+        bool isPasswordHidden = (ui->pwdLineEdit->echoMode() == QLineEdit::Password);
+        ui->pwdLineEdit->setEchoMode(isPasswordHidden ? QLineEdit::Normal : QLineEdit::Password);
+        togglePwdAction->setIcon(isPasswordHidden ? QIcon(":/LogReg/res/eye_open.png") : QIcon(":/LogReg/res/eye_close.png"));
+    });
+    toggleChkAction = new QAction(this);
+    ui->confirmLineEdit->parentWidget()->setCursor(Qt::PointingHandCursor);
+    toggleChkAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));
+    ui->confirmLineEdit->addAction(toggleChkAction, QLineEdit::TrailingPosition);
+    connect(toggleChkAction, &QAction::triggered, [=]() {
+        bool isPasswordHidden = (ui->confirmLineEdit->echoMode() == QLineEdit::Password);
+        ui->confirmLineEdit->setEchoMode(isPasswordHidden ? QLineEdit::Normal : QLineEdit::Password);
+        toggleChkAction->setIcon(isPasswordHidden ? QIcon(":/LogReg/res/eye_open.png") : QIcon(":/LogReg/res/eye_close.png"));
+    });
+    ui->pwdLineEdit->setStyleSheet("QLineEdit { padding-right: 25px; }");
+    ui->confirmLineEdit->setStyleSheet("QLineEdit { padding-right: 25px; }");
+
     ui->userTip->hide();
     ui->emailTip->hide();
     ui->pwdTip->hide();

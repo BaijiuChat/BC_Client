@@ -239,7 +239,7 @@ bool RegisterDialog::checkPwdValid()
     }
 
     if(!(hasUpper && hasLower && hasDigit)) {
-        ui->pwdTip->setText("密码需要包含大小写字母⚠️");
+        ui->pwdTip->setText("密码需要包含大小写字母和数字⚠️");
         return false;
     }
 

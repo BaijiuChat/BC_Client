@@ -57,21 +57,27 @@
       </widget>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout_3">
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0" rowminimumheight="0,0">
+       <property name="sizeConstraint">
+        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+       </property>
        <property name="leftMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
-       <property name="spacing">
-        <number>7</number>
+       <property name="horizontalSpacing">
+        <number>0</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
        </property>
        <item row="0" column="2">
         <widget class="QLineEdit" name="userLineEdit">
@@ -111,6 +117,18 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>14</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
@@ -121,7 +139,7 @@
           <string notr="true">color: red;</string>
          </property>
          <property name="text">
-          <string>需为4-15位字母/数字/下划线⚠️</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -133,19 +151,22 @@
      <item>
       <layout class="QGridLayout" name="gridLayout_4">
        <property name="leftMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
-       <property name="spacing">
-        <number>7</number>
+       <property name="horizontalSpacing">
+        <number>0</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
        </property>
        <item row="1" column="2">
         <widget class="QLabel" name="emailTip">
@@ -162,7 +183,7 @@
           <string notr="true">color: red;</string>
          </property>
          <property name="text">
-          <string>邮箱格式不正确，请仔细检查⚠️</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -207,16 +228,22 @@
      <item>
       <layout class="QGridLayout" name="gridLayout_5">
        <property name="leftMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>10</number>
+        <number>0</number>
+       </property>
+       <property name="horizontalSpacing">
+        <number>0</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
        </property>
        <item row="0" column="1">
         <spacer name="horizontalSpacer_5">
@@ -263,7 +290,7 @@
           <string notr="true">color: red;</string>
          </property>
          <property name="text">
-          <string>5-20位数字且包含大小写字母⚠️</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -275,16 +302,22 @@
      <item>
       <layout class="QGridLayout" name="gridLayout_6">
        <property name="leftMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>10</number>
+        <number>0</number>
+       </property>
+       <property name="horizontalSpacing">
+        <number>0</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
        </property>
        <item row="0" column="1">
         <spacer name="horizontalSpacer_6">
@@ -331,7 +364,7 @@
           <string notr="true">color: red;</string>
          </property>
          <property name="text">
-          <string>两次密码不一致⚠️</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -342,6 +375,12 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_2">
+       <property name="horizontalSpacing">
+        <number>0</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>4</number>
+       </property>
        <item row="0" column="4">
         <widget class="TimerBtn" name="getButton">
          <property name="minimumSize">
@@ -366,19 +405,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
        <item row="0" column="2">
         <widget class="QLineEdit" name="codeLineEdit">
          <property name="minimumSize">
@@ -386,6 +412,25 @@
            <width>0</width>
            <height>30</height>
           </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="codeTip">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>14</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color: red;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -409,29 +454,29 @@
          </property>
         </spacer>
        </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="codeTip">
-         <property name="maximumSize">
+       <item row="0" column="3">
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Policy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>16777215</width>
-           <height>14</height>
+           <width>6</width>
+           <height>20</height>
           </size>
          </property>
-         <property name="styleSheet">
-          <string notr="true">color: red;</string>
-         </property>
-         <property name="text">
-          <string>验证码为六位数字⚠️</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <property name="spacing">
+        <number>10</number>
+       </property>
        <item>
         <spacer name="horizontalSpacer_8">
          <property name="orientation">

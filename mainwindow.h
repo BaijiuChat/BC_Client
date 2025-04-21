@@ -30,6 +30,7 @@ public:
 
 protected slots:
     void switchToRegister();
+    void switchToLogin();
 
 private:
     Ui::MainWindow *ui;

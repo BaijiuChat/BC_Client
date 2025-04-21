@@ -38,11 +38,11 @@ RegisterDialog::RegisterDialog(QWidget *parent)
     ui->pwdLineEdit->setStyleSheet("QLineEdit { padding-right: 25px; }");
     ui->confirmLineEdit->setStyleSheet("QLineEdit { padding-right: 25px; }");
 
-    ui->userTip->hide();
-    ui->emailTip->hide();
-    ui->pwdTip->hide();
-    ui->confirmTip->hide();
-    ui->codeTip->hide();
+    // ui->userTip->hide();
+    // ui->emailTip->hide();
+    // ui->pwdTip->hide();
+    // ui->confirmTip->hide();
+    // ui->codeTip->hide();
     connect(ui->userLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkUserValid();
     });
@@ -59,6 +59,7 @@ RegisterDialog::RegisterDialog(QWidget *parent)
         checkCodeValid();
     });
 
+    connect(ui->cancelButton, &QPushButton::clicked, this, &RegisterDialog::cancelRegister);
 }
 
 RegisterDialog::~RegisterDialog()
@@ -115,14 +116,12 @@ void RegisterDialog::initHttpHandlers()
     _handlers.insert(ReqId::ID_REG_USER, [this](QJsonObject jsonObj){
         int error = jsonObj["error"].toInt();
         if (error != ErrorCodes::SUCCESS) {
-            if (error == ErrorCodes::VerifyExpired) {        // 1003
-                showTip(tr("验证码已过期"), false);
+            if (error == ErrorCodes::VerifyExpired || error == ErrorCodes::VerifyCodeErr) {
+                showTip(tr("验证码错误"), false);
             } else if (error == ErrorCodes::Error_Json) {  // 1004
                 showTip(tr("请确认您的信息"), false);
             } else if (error == ErrorCodes::PasswdErr) {  // 1004
                 showTip(tr("确认密码错误"), false);
-            } else if (error == ErrorCodes::VerifyCodeErr) {  // 1004
-                showTip(tr("验证码错误"), false);
             } else if (error == ErrorCodes::UserEmailExists) { // 2000
                 showTip(tr("该用户名或邮箱已被注册"), false);
             } else {
@@ -160,17 +159,17 @@ bool RegisterDialog::checkUserValid() {
     const QString text = ui->userLineEdit->text();
 
     if (text.isEmpty()) {
-        ui->userTip->hide();  // 显示错误提示
+        ui->userTip->setText("该项不能为空⚠️");
         return false;
     }
 
     const QRegularExpression regex("^\\w{4,15}$");
     if (!regex.match(text).hasMatch()) {
-        ui->userTip->show();
+        ui->userTip->setText("需为4-15位字母/数字/下划线⚠️");
         return false;
     }
 
-    ui->userTip->hide();       // 隐藏Label（避免留白）
+    ui->userTip->setText("");
     return true;
 }
 
@@ -178,17 +177,17 @@ bool RegisterDialog::checkEmailValid() {
     const QString text = ui->emailLineEdit->text();
 
     if (text.isEmpty()) {
-        ui->emailTip->hide();
+        ui->emailTip->setText("该项不能为空⚠️");
         return false;
     }
 
     const QRegularExpression regex(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
     if (!regex.match(text).hasMatch()) {
-        ui->emailTip->show();
+        ui->emailTip->setText("邮箱格式不正确⚠️");
         return false;
     }
 
-    ui->emailTip->hide();
+    ui->emailTip->setText("");
     return true;
 }
 
@@ -198,13 +197,13 @@ bool RegisterDialog::checkPwdValid()
     const QString pwd = ui->pwdLineEdit->text();
 
     if(pwd.isEmpty()) {
-        ui->pwdTip->hide();
+        ui->pwdTip->setText("该项不能为空⚠️");
         return false;
     }
 
     // 规则：5-20位，至少1大写+1小写+1数字
     if(pwd.length() < 5 || pwd.length() > 20) {
-        ui->pwdTip->show();
+        ui->pwdTip->setText("密码至少为5-20位数字⚠️");
         return false;
     }
 
@@ -216,11 +215,11 @@ bool RegisterDialog::checkPwdValid()
     }
 
     if(!(hasUpper && hasLower && hasDigit)) {
-        ui->pwdTip->show();
+        ui->pwdTip->setText("密码需要包含大小写字母⚠️");
         return false;
     }
 
-    ui->pwdTip->hide();
+    ui->pwdTip->setText("");
     return true;
 }
 
@@ -230,16 +229,16 @@ bool RegisterDialog::checkConfirmValid()
     const QString confirm = ui->confirmLineEdit->text();
 
     if(confirm.isEmpty()) {
-        ui->confirmTip->hide();
+        ui->confirmTip->setText("该项不能为空⚠️");
         return false;
     }
 
     if(pwd != confirm) {
-        ui->confirmTip->show();
+        ui->confirmTip->setText("两次密码不一致⚠️");
         return false;
     }
 
-    ui->confirmTip->hide();
+    ui->confirmTip->setText("");
     return true;
 }
 
@@ -248,17 +247,17 @@ bool RegisterDialog::checkCodeValid()
     const QString code = ui->codeLineEdit->text();
 
     if(code.isEmpty()) {
-        ui->codeTip->hide();
+        ui->codeTip->setText("该项不能为空⚠️");
         return false;
     }
 
     // 规则：6位纯数字
     if(code.length() != 6 || !code.toInt()) {
-        ui->codeTip->show();
+        ui->codeTip->setText("验证码需为六位数字⚠️");
         return false;
     }
 
-    ui->codeTip->hide();
+    ui->codeTip->setText("");
     return true;
 }
 
@@ -297,11 +296,7 @@ void RegisterDialog::on_registerButton_clicked()
         return;
     }
 
-    if(ui->userTip->isVisible() ||
-       ui->emailTip->isVisible() ||
-       ui->pwdTip->isVisible() ||
-       ui->confirmTip->isVisible() ||
-       ui->codeTip->isVisible()){
+    if(!checkUserValid() || !checkEmailValid() || !checkPwdValid() || !checkConfirmValid() || ! checkCodeValid()){
         showTip(tr("请修正错误"), false);
         return;
     }
@@ -315,4 +310,3 @@ void RegisterDialog::on_registerButton_clicked()
     HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix+"/user_register"),
                                         json_obj, ReqId::ID_REG_USER,Modules::REGISTERMOD);
 }
-

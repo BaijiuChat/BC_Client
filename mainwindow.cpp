@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     _login_Dlg->setWindowFlags(Qt::FramelessWindowHint);
     _reg_Dlg->setWindowFlags(Qt::FramelessWindowHint);
     // _reg_Dlg->hide(); // 不需要
+    connect(_reg_Dlg, &RegisterDialog::cancelRegister, this, &MainWindow::switchToLogin);
 }
 
 MainWindow::~MainWindow()
@@ -50,6 +52,14 @@ MainWindow::~MainWindow()
 void MainWindow::switchToRegister()
 {
     setCentralWidget(_reg_Dlg);
-    _login_Dlg->hide();
-    _reg_Dlg->show();
+    // _login_Dlg->hide();
+    // _reg_Dlg->show();
+}
+
+void MainWindow::switchToLogin()
+{
+    setCentralWidget(_login_Dlg);
+    // _reg_Dlg->hide();
+    // _login_Dlg->show();
+    qDebug()<<"triggered";
 }

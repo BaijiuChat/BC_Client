@@ -17,6 +17,9 @@ public:
     explicit RegisterDialog(QWidget *parent = nullptr);
     ~RegisterDialog();
 
+signals:
+    void cancelRegister();
+
 private slots:
     void on_getButton_clicked();
     void slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err);

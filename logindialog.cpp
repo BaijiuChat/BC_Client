@@ -15,3 +15,9 @@ LoginDialog::~LoginDialog()
 {
     delete ui;
 }
+
+void LoginDialog::setEmail(const QString &email)
+{
+    ui->userLineEdit->setText(email); // 自动填写邮箱
+    ui->pwdLineEdit->setFocus();    // 焦点移到密码输入框
+}

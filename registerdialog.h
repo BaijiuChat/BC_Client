@@ -15,10 +15,12 @@ class RegisterDialog : public QDialog
 
 public:
     explicit RegisterDialog(QWidget *parent = nullptr);
+    void clearAll();
     ~RegisterDialog();
 
 signals:
     void cancelRegister();
+    void registerSucceed(const QString& email);
 
 private slots:
     void on_getButton_clicked();
@@ -40,6 +42,9 @@ private:
     // QMap<TipErr, QString> _tip_errs;
 
     QAction *togglePwdAction, *toggleChkAction;
+    QTimer* backToLoginTimer;
+    int countDown = 3;
+    QString tipTemplate; // 存储提示文本模板
 
     QMap<ReqId, std::function<void(const QJsonObject&)>> _handlers;
     Ui::RegisterDialog *ui;

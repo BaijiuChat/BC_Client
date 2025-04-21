@@ -13,6 +13,7 @@ class LoginDialog : public QDialog
 
 public:
     explicit LoginDialog(QWidget *parent = nullptr);
+    void setEmail(const QString &email);
     ~LoginDialog();
 
 signals:

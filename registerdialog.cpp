@@ -62,6 +62,15 @@ RegisterDialog::RegisterDialog(QWidget *parent)
     connect(ui->cancelButton, &QPushButton::clicked, this, &RegisterDialog::cancelRegister);
 }
 
+void RegisterDialog::clearAll()
+{
+    ui->userLineEdit->clear();
+    ui->emailLineEdit->clear();
+    ui->pwdLineEdit->clear();
+    ui->confirmLineEdit->clear();
+    ui->codeLineEdit->clear();
+}
+
 RegisterDialog::~RegisterDialog()
 {
     delete ui;
@@ -83,10 +92,10 @@ void RegisterDialog::showTip(QString str, bool isOK)
 void RegisterDialog::on_getButton_clicked()
 {
     auto email = ui->emailLineEdit->text();
-    static QRegularExpression regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)"); // AI生成正则表达式
-    regex.setPatternOptions(QRegularExpression::CaseInsensitiveOption); // 设置大小写不敏感
-    bool match = regex.match(email.trimmed()).hasMatch();
-    if(match){
+    // static QRegularExpression regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)"); // AI生成正则表达式
+    // regex.setPatternOptions(QRegularExpression::CaseInsensitiveOption); // 设置大小写不敏感
+    // bool match = regex.match(email.trimmed()).hasMatch();
+    if(checkEmailValid()){
         QJsonObject json_obj;
         json_obj["email"] = email;
         HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix + "/get_verifycode"),
@@ -109,7 +118,7 @@ void RegisterDialog::initHttpHandlers()
 
         auto email = jsonObj["email"].toString();
         showTip(tr("验证码已发送至邮箱"), true);
-        qDebug() << "email是" << email;
+        // qDebug() << "email是" << email;
     });
 
     //注册注册用户回包逻辑
@@ -130,8 +139,23 @@ void RegisterDialog::initHttpHandlers()
             return;
         }
         auto email = jsonObj["email"].toString();
-        showTip(tr("用户注册成功"), true);
-        qDebug()<< "email is " << email ;
+
+        tipTemplate = tr("恭喜你注册成功！\n将在%1秒后跳回登录");
+        showTip(tipTemplate.arg(countDown), true);// 显示初始提示
+        backToLoginTimer = new QTimer(this);
+        connect(backToLoginTimer, &QTimer::timeout, this, [this, email]() {
+            --countDown;
+            if (countDown <= 0) {
+                backToLoginTimer->stop();
+                backToLoginTimer->deleteLater();
+                showTip("", false); // 隐藏提示
+                clearAll();
+                emit registerSucceed(email);
+            } else {
+                showTip(tipTemplate.arg(countDown), true); // 更新倒计时文本
+            }
+        });
+        backToLoginTimer->start(1000); // 每秒触发一次
     });
 }
 

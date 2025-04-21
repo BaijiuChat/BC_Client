@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStackedWidget>
 #include "logindialog.h"
 #include "registerdialog.h"
 /******************************************************************************
@@ -34,6 +35,7 @@ protected slots:
 
 private:
     Ui::MainWindow *ui;
+    QStackedWidget *_stackedWidget;
     LoginDialog *_login_Dlg;
     RegisterDialog *_reg_Dlg;
 };

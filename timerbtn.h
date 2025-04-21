@@ -4,7 +4,6 @@
 #include <QPushButton>
 #include <QMouseEvent>
 #include <QTimer>
-#include <QDebug>
 
 class TimerBtn: public QPushButton
 {

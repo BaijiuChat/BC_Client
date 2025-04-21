@@ -2,6 +2,7 @@
 #define REGISTERDIALOG_H
 
 #include <QDialog>
+#include <QAction>
 #include "global.h"
 
 namespace Ui {
@@ -30,11 +31,13 @@ private:
     bool checkConfirmValid();
     bool checkCodeValid();
 
-    void showTip(QString str,bool isOK);
-    void AddTipErr(TipErr te, QString tips);
-    void DelTipErr(TipErr te);
+    void showTip(QString str, bool isOK);
+    // void AddTipErr(TipErr te, QString tips);
+    // void DelTipErr(TipErr te);
+    // QMap<TipErr, QString> _tip_errs;
 
-    QMap<TipErr, QString> _tip_errs;
+    QAction *togglePwdAction, *toggleChkAction;
+
     QMap<ReqId, std::function<void(const QJsonObject&)>> _handlers;
     Ui::RegisterDialog *ui;
 };

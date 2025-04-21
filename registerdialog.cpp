@@ -19,26 +19,27 @@ RegisterDialog::RegisterDialog(QWidget *parent)
 
     initHttpHandlers();
 
-    ui->tip->clear();
+    ui->userTip->hide();
+    ui->emailTip->hide();
+    ui->pwdTip->hide();
+    ui->confirmTip->hide();
+    ui->codeTip->hide();
     connect(ui->userLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkUserValid();
     });
-
     connect(ui->emailLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkEmailValid();
     });
-
     connect(ui->pwdLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkPwdValid();
     });
-
     connect(ui->confirmLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkConfirmValid();
     });
-
     connect(ui->codeLineEdit, &QLineEdit::editingFinished, this, [this](){
         checkCodeValid();
     });
+
 }
 
 RegisterDialog::~RegisterDialog()
@@ -104,26 +105,132 @@ void RegisterDialog::initHttpHandlers()
     });
 }
 
-void RegisterDialog::AddTipErr(TipErr te, QString tips)
-{
-    _tip_errs[te] = tips;
-    showTip(tips, false);
-}
+//////////////////////////////////////////////
+///               Tips芝士                 ///
+//////////////////////////////////////////////
 
-void RegisterDialog::DelTipErr(TipErr te)
-{
-    _tip_errs.remove(te);
-    if(_tip_errs.empty()){
-        ui->tip->setText("完成你的注册...");
-        return;
+// void RegisterDialog::AddTipErr(TipErr te, QString tips)
+// {
+//     _tip_errs[te] = tips;
+//     showTip(tips, false);
+// }
+
+// void RegisterDialog::DelTipErr(TipErr te)
+// {
+//     _tip_errs.remove(te);
+//     if(_tip_errs.empty()){
+//         ui->tip->setText("");
+//         return;
+//     }
+//     showTip(_tip_errs.first(), false);
+// }
+
+bool RegisterDialog::checkUserValid() {
+    const QString text = ui->userLineEdit->text();
+
+    if (text.isEmpty()) {
+        ui->userTip->hide();  // 显示错误提示
+        return false;
     }
-    showTip(_tip_errs.first(), false);
+
+    const QRegularExpression regex("^\\w{4,15}$");
+    if (!regex.match(text).hasMatch()) {
+        ui->userTip->show();
+        return false;
+    }
+
+    ui->userTip->hide();       // 隐藏Label（避免留白）
+    return true;
 }
 
-bool RegisterDialog::checkUserValid()
+bool RegisterDialog::checkEmailValid() {
+    const QString text = ui->emailLineEdit->text();
+
+    if (text.isEmpty()) {
+        ui->emailTip->hide();
+        return false;
+    }
+
+    const QRegularExpression regex(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
+    if (!regex.match(text).hasMatch()) {
+        ui->emailTip->show();
+        return false;
+    }
+
+    ui->emailTip->hide();
+    return true;
+}
+
+
+bool RegisterDialog::checkPwdValid()
 {
+    const QString pwd = ui->pwdLineEdit->text();
 
+    if(pwd.isEmpty()) {
+        ui->pwdTip->hide();
+        return false;
+    }
+
+    // 规则：5-20位，至少1大写+1小写+1数字
+    if(pwd.length() < 5 || pwd.length() > 20) {
+        ui->pwdTip->show();
+        return false;
+    }
+
+    bool hasUpper = false, hasLower = false, hasDigit = false;
+    for(const QChar& c : pwd) {
+        if(c.isUpper()) hasUpper = true;
+        else if(c.isLower()) hasLower = true;
+        else if(c.isDigit()) hasDigit = true;
+    }
+
+    if(!(hasUpper && hasLower && hasDigit)) {
+        ui->pwdTip->show();
+        return false;
+    }
+
+    ui->pwdTip->hide();
+    return true;
 }
+
+bool RegisterDialog::checkConfirmValid()
+{
+    const QString pwd = ui->pwdLineEdit->text();
+    const QString confirm = ui->confirmLineEdit->text();
+
+    if(confirm.isEmpty()) {
+        ui->confirmTip->hide();
+        return false;
+    }
+
+    if(pwd != confirm) {
+        ui->confirmTip->show();
+        return false;
+    }
+
+    ui->confirmTip->hide();
+    return true;
+}
+
+bool RegisterDialog::checkCodeValid()
+{
+    const QString code = ui->codeLineEdit->text();
+
+    if(code.isEmpty()) {
+        ui->codeTip->hide();
+        return false;
+    }
+
+    // 规则：6位纯数字
+    if(code.length() != 6 || !code.toInt()) {
+        ui->codeTip->show();
+        return false;
+    }
+
+    ui->codeTip->hide();
+    return true;
+}
+
 
 void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
 {
@@ -150,33 +257,21 @@ void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
 
 void RegisterDialog::on_registerButton_clicked()
 {
-    if(ui->userLineEdit->text() == ""){
-        showTip(tr("用户名不能为空"), false);
+    if(ui->userLineEdit->text() == "" ||
+       ui->emailLineEdit->text() == "" ||
+       ui->pwdLineEdit->text() == "" ||
+       ui->confirmLineEdit->text() == "" ||
+       ui->codeLineEdit->text() == ""){
+        showTip(tr("请补全信息"), false);
         return;
     }
 
-    if(ui->emailLineEdit->text() == ""){
-        showTip(tr("邮箱不能为空"), false);
-        return;
-    }
-
-    if(ui->pwdLineEdit->text() == ""){
-        showTip(tr("密码不能为空"), false);
-        return;
-    }
-
-    if(ui->confirmLineEdit->text() == ""){
-        showTip(tr("确认密码不能为空"), false);
-        return;
-    }
-
-    if(ui->confirmLineEdit->text() != ui->pwdLineEdit->text()){
-        showTip(tr("密码和确认密码不匹配"), false);
-        return;
-    }
-
-    if(ui->codeLineEdit->text() == ""){
-        showTip(tr("验证码不能为空"), false);
+    if(ui->userTip->isVisible() ||
+       ui->emailTip->isVisible() ||
+       ui->pwdTip->isVisible() ||
+       ui->confirmTip->isVisible() ||
+       ui->codeTip->isVisible()){
+        showTip(tr("请修正错误"), false);
         return;
     }
 

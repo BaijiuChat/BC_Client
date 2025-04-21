@@ -2,7 +2,6 @@
 
 TimerBtn::TimerBtn(QWidget *parent):QPushButton(parent), _counter(10)
 {
-    qDebug() << "timerbtn创建";
     _timer = new QTimer(this);
 
     connect(_timer, &QTimer::timeout, [this](){

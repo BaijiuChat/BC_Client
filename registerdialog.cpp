@@ -20,7 +20,6 @@ RegisterDialog::RegisterDialog(QWidget *parent)
     initHttpHandlers();
 
     togglePwdAction = new QAction(this);
-    ui->pwdLineEdit->setStyleSheet("QLineEdit:hover { cursor: PointingHandCursor; }");
     togglePwdAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));
     ui->pwdLineEdit->addAction(togglePwdAction, QLineEdit::TrailingPosition);
     connect(togglePwdAction, &QAction::triggered, [=]() {
@@ -29,7 +28,6 @@ RegisterDialog::RegisterDialog(QWidget *parent)
         togglePwdAction->setIcon(isPasswordHidden ? QIcon(":/LogReg/res/eye_open.png") : QIcon(":/LogReg/res/eye_close.png"));
     });
     toggleChkAction = new QAction(this);
-    ui->confirmLineEdit->parentWidget()->setCursor(Qt::PointingHandCursor);
     toggleChkAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));
     ui->confirmLineEdit->addAction(toggleChkAction, QLineEdit::TrailingPosition);
     connect(toggleChkAction, &QAction::triggered, [=]() {
@@ -116,8 +114,20 @@ void RegisterDialog::initHttpHandlers()
     //注册注册用户回包逻辑
     _handlers.insert(ReqId::ID_REG_USER, [this](QJsonObject jsonObj){
         int error = jsonObj["error"].toInt();
-        if(error != ErrorCodes::SUCCESS){
-            showTip(tr("参数错误"),false);
+        if (error != ErrorCodes::SUCCESS) {
+            if (error == ErrorCodes::VerifyExpired) {        // 1003
+                showTip(tr("验证码已过期"), false);
+            } else if (error == ErrorCodes::Error_Json) {  // 1004
+                showTip(tr("请确认您的信息"), false);
+            } else if (error == ErrorCodes::PasswdErr) {  // 1004
+                showTip(tr("确认密码错误"), false);
+            } else if (error == ErrorCodes::VerifyCodeErr) {  // 1004
+                showTip(tr("验证码错误"), false);
+            } else if (error == ErrorCodes::UserEmailExists) { // 2000
+                showTip(tr("该用户名或邮箱已被注册"), false);
+            } else {
+                showTip(tr("出现了一些错误..."), false);
+            }
             return;
         }
         auto email = jsonObj["email"].toString();

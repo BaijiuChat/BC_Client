@@ -34,6 +34,16 @@ enum ErrorCodes{
     SUCCESS = 0,
     ERR_JSON = 1, // JSON解析失败
     ERR_NETWORK = 2, // 网络错误
+
+    Error_Json = 1001,      // JSON解析失败
+    VerifyExpired = 1003,	//验证码过期
+    VerifyCodeErr = 1004,	//验证码错误
+    PasswdErr = 1006,		//密码不匹配错误
+    EmailNotMatch = 1007,	//邮箱不匹配
+    PasswdUpFailed = 1008,	//更新密码失败
+    PasswdInvalid = 1009,	//密码更新失败
+
+    UserEmailExists = 2000, // 用户或邮箱存在
 };
 
 // enum TipErr{

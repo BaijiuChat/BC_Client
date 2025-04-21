@@ -70,6 +70,9 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
+       <property name="spacing">
+        <number>7</number>
+       </property>
        <item row="0" column="2">
         <widget class="QLineEdit" name="userLineEdit">
          <property name="minimumSize">
@@ -111,7 +114,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>15</height>
+           <height>14</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -141,6 +144,31 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
+       <property name="spacing">
+        <number>7</number>
+       </property>
+       <item row="1" column="2">
+        <widget class="QLabel" name="emailTip">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>14</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color: red;</string>
+         </property>
+         <property name="text">
+          <string>邮箱格式不正确，请仔细检查⚠️</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
@@ -171,28 +199,6 @@
            <width>0</width>
            <height>30</height>
           </size>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="emailTip">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>15</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">color: red;</string>
-         </property>
-         <property name="text">
-          <string>邮箱格式不正确，请仔细检查⚠️</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -250,7 +256,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>15</height>
+           <height>14</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -318,7 +324,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>15</height>
+           <height>14</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -408,7 +414,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>15</height>
+           <height>14</height>
           </size>
          </property>
          <property name="styleSheet">

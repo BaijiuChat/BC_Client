@@ -18,6 +18,10 @@ public:
 
 signals:
     void registerRequest();
+    void resetRequest();
+
+private slots:
+    void on_forgetButton_clicked();
 
 private:
     Ui::LoginDialog *ui;

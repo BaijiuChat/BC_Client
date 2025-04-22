@@ -24,10 +24,12 @@ extern std::function<QString(QString)> xorString;
 enum ReqId{
     ID_GET_VERIFY_CODE = 1001, //请求验证码
     ID_REG_USER = 1002, // 注册用户
+    ID_RESET_USER = 1003, // 重置密码
 };
 
 enum Modules{
     REGISTERMOD = 1, // 注册模块
+    RESETMOD = 2,
 };
 
 enum ErrorCodes{
@@ -39,7 +41,7 @@ enum ErrorCodes{
     VerifyExpired = 1003,	//验证码过期
     VerifyCodeErr = 1004,	//验证码错误
     PasswdErr = 1006,		//密码不匹配错误
-    EmailNotMatch = 1007,	//邮箱不匹配
+    UserMailNotMatch = 1007,	//用户邮箱不匹配
     PasswdUpFailed = 1008,	//更新密码失败
     PasswdInvalid = 1009,	//密码更新失败
 

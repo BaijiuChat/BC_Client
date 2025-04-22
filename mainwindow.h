@@ -5,6 +5,7 @@
 #include <QStackedWidget>
 #include "logindialog.h"
 #include "registerdialog.h"
+#include "resetdialog.h"
 /******************************************************************************
  *
  * @file       mainwindow.h
@@ -32,11 +33,13 @@ public:
 protected slots:
     void switchToRegister();
     void switchToLogin();
+    void switchToReset();
 
 private:
     Ui::MainWindow *ui;
     QStackedWidget *_stackedWidget;
     LoginDialog *_login_Dlg;
     RegisterDialog *_reg_Dlg;
+    ResetDialog *_reset_Dlg;
 };
 #endif // MAINWINDOW_H

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "resetdialog.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -9,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     _login_Dlg = new LoginDialog(this); // 初始化，设置父窗口
     _reg_Dlg = new RegisterDialog(this);
+    _reset_Dlg = new ResetDialog(this);
     setCentralWidget(_login_Dlg); // 设置主窗口有谁
     // _login_Dlg->show(); // 显示，注意已经不用了
     // _reg_Dlg->hide(); // 不需要
@@ -18,12 +20,19 @@ MainWindow::MainWindow(QWidget *parent)
     _stackedWidget = new QStackedWidget(this);
     _stackedWidget->addWidget(_login_Dlg);
     _stackedWidget->addWidget(_reg_Dlg);
+    _stackedWidget->addWidget(_reset_Dlg);
     setCentralWidget(_stackedWidget); // 和先后顺序有关
 
     // 创建注册信号和槽
     connect(_login_Dlg, &LoginDialog::registerRequest, this, &MainWindow::switchToRegister);
+    connect(_login_Dlg, &LoginDialog::resetRequest, this, &MainWindow::switchToReset);
     connect(_reg_Dlg, &RegisterDialog::cancelRegister, this, &MainWindow::switchToLogin);
+    connect(_reset_Dlg, &ResetDialog::cancelReset, this, &MainWindow::switchToLogin);
     connect(_reg_Dlg, &RegisterDialog::registerSucceed, [this](const QString& email){
+        switchToLogin();
+        _login_Dlg->setEmail(email); // 自动填充邮箱
+    });
+    connect(_reset_Dlg, &ResetDialog::resetSucceed, [this](const QString& email){
         switchToLogin();
         _login_Dlg->setEmail(email); // 自动填充邮箱
     });
@@ -74,4 +83,9 @@ void MainWindow::switchToLogin()
     // setCentralWidget(_login_Dlg);
     // _reg_Dlg->hide();
     // _login_Dlg->show();
+}
+
+void MainWindow::switchToReset()
+{
+    _stackedWidget->setCurrentWidget(_reset_Dlg);
 }

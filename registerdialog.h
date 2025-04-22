@@ -2,6 +2,8 @@
 #define REGISTERDIALOG_H
 
 #include <QDialog>
+#include <QTimer>
+#include <QString>
 #include <QAction>
 #include "global.h"
 
@@ -15,7 +17,6 @@ class RegisterDialog : public QDialog
 
 public:
     explicit RegisterDialog(QWidget *parent = nullptr);
-    void clearAll();
     ~RegisterDialog();
 
 signals:
@@ -30,6 +31,7 @@ private slots:
 private:
     void initHttpHandlers();
 
+    void clearAll();
     bool checkUserValid();
     bool checkEmailValid();
     bool checkPwdValid();

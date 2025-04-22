@@ -204,19 +204,19 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <property name="spacing">
-        <number>7</number>
+        <number>0</number>
        </property>
        <property name="leftMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="topMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <item>
         <spacer name="horizontalSpacer">
@@ -225,35 +225,51 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="forgetLabel">
+        <widget class="QPushButton" name="forgetButton">
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>25</height>
+           <height>30</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>25</height>
+           <height>30</height>
           </size>
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>16</pointsize>
           </font>
          </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;忘记密码&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>忘记密码</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Policy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>10</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>

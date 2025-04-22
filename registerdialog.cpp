@@ -125,16 +125,28 @@ void RegisterDialog::initHttpHandlers()
     _handlers.insert(ReqId::ID_REG_USER, [this](QJsonObject jsonObj){
         int error = jsonObj["error"].toInt();
         if (error != ErrorCodes::SUCCESS) {
-            if (error == ErrorCodes::VerifyExpired || error == ErrorCodes::VerifyCodeErr) {
-                showTip(tr("验证码错误"), false);
-            } else if (error == ErrorCodes::Error_Json) {  // 1004
-                showTip(tr("请确认您的信息"), false);
-            } else if (error == ErrorCodes::PasswdErr) {  // 1004
-                showTip(tr("确认密码错误"), false);
-            } else if (error == ErrorCodes::UserEmailExists) { // 2000
+            if (error == ErrorCodes::VerifyExpired) {
+                showTip(tr("验证码已过期，请重新获取"), false);
+            } else if (error == ErrorCodes::VerifyCodeErr) {
+                showTip(tr("验证码错误，请重新输入"), false);
+            } else if (error == ErrorCodes::Error_Json) {
+                showTip(tr("请确认您的信息格式正确"), false);
+            } else if (error == ErrorCodes::PasswdErr) {
+                showTip(tr("两次输入的密码不一致"), false);
+            } else if (error == ErrorCodes::UserEmailExists) {
                 showTip(tr("该用户名或邮箱已被注册"), false);
+            } else if (error == ErrorCodes::SQLFailed) {
+                showTip(tr("服务器数据库异常"), false);
+            } else if (error == ErrorCodes::DatabaseConnectionFailed) {
+                showTip(tr("无法连接到数据库服务"), false);
+            } else if (error == ErrorCodes::DatabaseProcedureError) {
+                showTip(tr("服务器处理异常"), false);
+            } else if (error == ErrorCodes::ERR_NETWORK) {
+                showTip(tr("网络连接异常，请检查网络"), false);
+            } else if (error == ErrorCodes::GeneralException || error == ErrorCodes::UnknownException) {
+                showTip(tr("服务器内部错误"), false);
             } else {
-                showTip(tr("出现了一些错误..."), false);
+                showTip(tr("注册失败，请稍后重试"), false);
             }
             return;
         }
@@ -148,7 +160,8 @@ void RegisterDialog::initHttpHandlers()
             if (countDown <= 0) {
                 backToLoginTimer->stop();
                 backToLoginTimer->deleteLater();
-                showTip("", false); // 隐藏提示
+                countDown = 3; // 重置倒计时
+                showTip("让我们帮助你完成注册！", true); // 隐藏提示
                 clearAll();
                 emit registerSucceed(email);
             } else {
@@ -311,15 +324,6 @@ void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
 
 void RegisterDialog::on_registerButton_clicked()
 {
-    if(ui->userLineEdit->text() == "" ||
-       ui->emailLineEdit->text() == "" ||
-       ui->pwdLineEdit->text() == "" ||
-       ui->confirmLineEdit->text() == "" ||
-       ui->codeLineEdit->text() == ""){
-        showTip(tr("请补全信息"), false);
-        return;
-    }
-
     if(!checkUserValid() || !checkEmailValid() || !checkPwdValid() || !checkConfirmValid() || ! checkCodeValid()){
         showTip(tr("请修正错误"), false);
         return;

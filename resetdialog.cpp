@@ -225,14 +225,32 @@ void ResetDialog::initHttpHandlers()
     _handlers.insert(ReqId::ID_RESET_USER, [this](QJsonObject jsonObj){
         int error = jsonObj["error"].toInt();
         if (error != ErrorCodes::SUCCESS) {
-            if (error == ErrorCodes::VerifyExpired || error == ErrorCodes::VerifyCodeErr) {
-                showTip(tr("验证码错误"), false);
-            } else if (error == ErrorCodes::Error_Json) {  // 1004
-                showTip(tr("请确认您的信息"), false);
-            } else if (error == ErrorCodes::PasswdErr) {  // 1004
-                showTip(tr("确认密码错误"), false);
+            if (error == ErrorCodes::VerifyExpired) {
+                showTip(tr("验证码已过期，请重新获取"), false);
+            } else if (error == ErrorCodes::VerifyCodeErr) {
+                showTip(tr("验证码错误，请重新输入"), false);
+            } else if (error == ErrorCodes::Error_Json) {
+                showTip(tr("请确认您的信息格式正确"), false);
+            } else if (error == ErrorCodes::PasswdErr) {
+                showTip(tr("两次输入的密码不一致"), false);
+            } else if (error == ErrorCodes::UserEmailNotExists) {
+                showTip(tr("用户或邮箱不存在\n或者是新密码与旧密码一致"), false);
+            } else if (error == ErrorCodes::UserMailNotMatch) {
+                showTip(tr("用户名与邮箱不匹配"), false);
+            } else if (error == ErrorCodes::PasswdUpFailed) {
+                showTip(tr("密码更新失败"), false);
+            } else if (error == ErrorCodes::PasswdInvalid) {
+                showTip(tr("密码格式无效"), false);
+            } else if (error == ErrorCodes::SQLFailed) {
+                showTip(tr("服务器数据库异常"), false);
+            } else if (error == ErrorCodes::DatabaseConnectionFailed) {
+                showTip(tr("无法连接到数据库服务"), false);
+            } else if (error == ErrorCodes::ERR_NETWORK) {
+                showTip(tr("网络连接异常，请检查网络"), false);
+            } else if (error == ErrorCodes::GeneralException || error == ErrorCodes::UnknownException) {
+                showTip(tr("服务器内部错误"), false);
             } else {
-                showTip(tr("出现了一些错误..."), false);
+                showTip(tr("密码重置失败，请稍后重试"), false);
             }
             return;
         }
@@ -246,7 +264,8 @@ void ResetDialog::initHttpHandlers()
             if (countDown <= 0) {
                 backToLoginTimer->stop();
                 backToLoginTimer->deleteLater();
-                showTip("", false); // 隐藏提示
+                countDown = 3; // 重置倒计时
+                showTip("恢复您的密码", true); // 隐藏提示
                 clearAll();
                 emit resetSucceed(email);
             } else {
@@ -259,16 +278,7 @@ void ResetDialog::initHttpHandlers()
 
 void ResetDialog::on_resetButton_clicked()
 {
-    if(ui->userLineEdit->text() == "" ||
-        ui->emailLineEdit->text() == "" ||
-        ui->pwdLineEdit->text() == "" ||
-        ui->confirmLineEdit->text() == "" ||
-        ui->codeLineEdit->text() == ""){
-        showTip(tr("请补全信息"), false);
-        return;
-    }
-
-    if(!checkUserValid() || !checkEmailValid() || !checkPwdValid() || !checkConfirmValid() || ! checkCodeValid()){
+    if(!checkUserValid() || !checkEmailValid() || !checkCodeValid() || !checkPwdValid() || !checkConfirmValid()){
         showTip(tr("请修正错误"), false);
         return;
     }
@@ -280,7 +290,7 @@ void ResetDialog::on_resetButton_clicked()
     json_obj["confirm"] = xorString(ui->confirmLineEdit->text());
     json_obj["verifycode"] = ui->codeLineEdit->text();
     HttpMgr::GetInstance()->PostHttpReq(QUrl(gate_url_prefix+"/reset_pwd"),
-                                        json_obj, ReqId::ID_REG_USER,Modules::RESETMOD);
+                                        json_obj, ReqId::ID_RESET_USER,Modules::RESETMOD);
 }
 
 void ResetDialog::slot_reset_mod_finish(ReqId id, QString res, ErrorCodes err)

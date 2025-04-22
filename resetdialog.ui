@@ -353,13 +353,19 @@
        <property name="verticalSpacing">
         <number>4</number>
        </property>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="confirmLineEdit">
-         <property name="minimumSize">
+       <item row="1" column="2">
+        <widget class="QLabel" name="confirmTip">
+         <property name="maximumSize">
           <size>
-           <width>0</width>
-           <height>30</height>
+           <width>16777215</width>
+           <height>14</height>
           </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -375,21 +381,31 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="confirmTip">
-         <property name="maximumSize">
+       <item row="0" column="2">
+        <widget class="QLineEdit" name="confirmLineEdit">
+         <property name="minimumSize">
           <size>
-           <width>16777215</width>
-           <height>14</height>
+           <width>0</width>
+           <height>30</height>
           </size>
          </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
         </widget>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_9">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Policy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>1</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>

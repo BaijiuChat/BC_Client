@@ -8,12 +8,12 @@ ResetDialog::ResetDialog(QWidget *parent)
     ui->setupUi(this);
 
     initHttpHandlers();
-
-    ui->pwdLineEdit->setEchoMode(QLineEdit::Password);
-    ui->confirmLineEdit->setEchoMode(QLineEdit::Password);
-
+    // Tip属性
     ui->tip->setProperty("state","normal"); // 设置默认属性，但不会刷新
     repolish(ui->tip); // 刷新属性
+    // 密码属性
+    ui->pwdLineEdit->setEchoMode(QLineEdit::Password);
+    ui->confirmLineEdit->setEchoMode(QLineEdit::Password);
 
     togglePwdAction = new QAction(this);
     togglePwdAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));

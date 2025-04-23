@@ -1,8 +1,5 @@
 #include "registerdialog.h"
 #include "ui_registerdialog.h"
-#include "global.h" // 定义刷新函数
-#include <QRegularExpression>
-#include "httpmgr.h"
 
 RegisterDialog::RegisterDialog(QWidget *parent)
     : QDialog(parent)

@@ -25,11 +25,13 @@ enum ReqId{
     ID_GET_VERIFY_CODE = 1001, //请求验证码
     ID_REG_USER = 1002, // 注册用户
     ID_RESET_USER = 1003, // 重置密码
+    ID_LOGIN_USER = 1004, //登录用户
 };
 
 enum Modules{
     REGISTERMOD = 1, // 注册模块
-    RESETMOD = 2,
+    RESETMOD = 2, // 重置密码
+    LOGINMOD = 3, // 登录模块
 };
 
 // 统一错误码定义（服务器和客户端共用）
@@ -48,6 +50,7 @@ enum ErrorCodes {
     UserMailNotMatch = 1007,// 邮箱不匹配
     PasswdUpFailed = 1008,  // 更新密码失败
     PasswdInvalid = 1009,   // 密码无效
+    RPCGetFailed = 1010,    // RPC无法获取聊天服务器
 
     // 数据相关错误码 (2000-2999)
     UserEmailExists = 2000,     // 用户或邮箱存在

@@ -5,7 +5,9 @@
 #include <QTimer>
 #include <QString>
 #include <QAction>
-#include "global.h"
+#include <QRegularExpression>
+#include "global.h" // 定义刷新函数
+#include "httpmgr.h"
 
 namespace Ui {
 class RegisterDialog;

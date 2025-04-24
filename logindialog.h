@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include "httpmgr.h"
+#include "tcpmgr.h"
 
 namespace Ui {
 class LoginDialog;
@@ -27,6 +28,7 @@ public:
 signals:
     void registerRequest();
     void resetRequest();
+    void sig_connect_tcp(ServerInfo);
 
 private slots:
     void on_forgetButton_clicked();
@@ -38,6 +40,9 @@ private:
     Ui::LoginDialog *ui;
     QAction *togglePwdAction;
     QMap<ReqId, std::function<void(const QJsonObject&)>> _handlers;
+
+    int _uid;
+    QString _token;
 };
 
 #endif // LOGINDIALOG_H

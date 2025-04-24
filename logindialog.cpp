@@ -19,8 +19,8 @@ LoginDialog::LoginDialog(QWidget *parent)
     }
     QPushButton:hover {
         background-color: rgba(0, 0, 0, 0.05); /* 可选的悬浮反馈 */
-    }
-)");
+    })");
+
     togglePwdAction = new QAction(this);
     togglePwdAction->setIcon(QIcon(":/LogReg/res/eye_close.png"));
     ui->pwdLineEdit->addAction(togglePwdAction, QLineEdit::TrailingPosition);
@@ -42,6 +42,10 @@ LoginDialog::LoginDialog(QWidget *parent)
     // 登录模块的信号与槽
     connect(HttpMgr::GetInstance().get(), &HttpMgr::sig_login_mod_finish, this,
             &LoginDialog::slot_login_mod_finish);
+    //连接tcp连接请求的信号和槽函数
+    connect(this, &LoginDialog::sig_connect_tcp, TcpMgr::GetInstance().get(), &TcpMgr::slot_tcp_connect);
+    //连接tcp管理者发出的连接成功信号
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_con_success, this, &LoginDialog::slot_tcp_con_finish);
 }
 
 LoginDialog::~LoginDialog()
@@ -153,6 +157,24 @@ void LoginDialog::slot_login_mod_finish(ReqId id, QString res, ErrorCodes err)
     return;
 }
 
+void LoginDialog::slot_tcp_con_finish(bool bsuccess)
+{
+    if(bsuccess){
+        showTip(tr("连接成功，正在登录"), true);
+        QJsonObject jsonObj;
+        jsonObj["uid"] = _uid;
+        jsonObj["token"] = _token;
+
+        QJsonDocument doc(jsonObj);
+        QByteArray jsonString = doc.toJson(QJsonDocument::Indented);
+
+        //发送tcp请求给ChatServer
+        TcpMgr::GetInstance()->sig_send_data(ReqId::ID_CHAT_LOGIN, jsonString);
+    }else{
+        showTip(tr("连接失败⚠️"), false);
+    }
+}
+
 void LoginDialog::initHttpHandlers()
 {
     //注册获取登录回包逻辑
@@ -163,6 +185,16 @@ void LoginDialog::initHttpHandlers()
             return;
         }
         auto email = jsonObj["email"].toString();
-        showTip(tr("登录成功"), true);
+        ServerInfo serverInfo;
+        serverInfo.Uid = jsonObj["uid"].toInt();
+        serverInfo.Host = jsonObj["host"].toString();
+        serverInfo.Port = jsonObj["port"].toString();
+        serverInfo.Token = jsonObj["token"].toString();
+
+        _uid = serverInfo.Uid;
+        _token = serverInfo.Token;
+        qDebug()<< "email is " << email << " uid is " << serverInfo.Uid <<" host is "
+                 << serverInfo.Host << " Port is " << serverInfo.Port << " Token is " << serverInfo.Token;
+        emit sig_connect_tcp(serverInfo);
     });
 }

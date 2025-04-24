@@ -26,6 +26,8 @@ enum ReqId{
     ID_REG_USER = 1002, // 注册用户
     ID_RESET_USER = 1003, // 重置密码
     ID_LOGIN_USER = 1004, //登录用户
+    ID_CHAT_LOGIN = 1005, // 聊天登录
+    ID_CHAT_LOGIN_RSP = 1006, // 聊天登录响应
 };
 
 enum Modules{
@@ -64,14 +66,12 @@ enum ErrorCodes {
     UnknownException = 2005,    // 未知异常（建议改为3002）
     UnknownError = 2006         // 未定义的错误（建议改为3003）
 };
-// enum TipErr{
-//     TIP_SUCCESS = 0,
-//     TIP_EMAIL_ERR = 1,
-//     TIP_PWD_ERR = 2,
-//     TIP_CONFIRM_ERR = 3,
-//     TIP_PWD_CONFIRM = 4,
-//     TIP_VARIFY_ERR = 5,
-//     TIP_USER_ERR = 6
-// };
+
+struct ServerInfo{
+    QString Host;
+    QString Port;
+    QString Token;
+    int Uid;
+};
 
 #endif // GLOBAL_H

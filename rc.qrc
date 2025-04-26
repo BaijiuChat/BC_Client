@@ -4,5 +4,12 @@
         <file>style/stylesheet.qss</file>
         <file>res/eye_close.png</file>
         <file>res/eye_open.png</file>
+        <file>res/plus.png</file>
+        <file>res/chat.png</file>
+        <file>res/contact.png</file>
+        <file>res/call.png</file>
+        <file>res/upToGroup.png</file>
+        <file>res/emoji.png</file>
+        <file>res/video.png</file>
     </qresource>
 </RCC>

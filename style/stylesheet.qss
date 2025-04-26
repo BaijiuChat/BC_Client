@@ -8,3 +8,51 @@ QDialog#LoginDialog, #RegisterDialog, #ResetDialog{
 #tip[state='error']{
     color:red;
 }
+
+QToolButton {
+    background: transparent;
+    border: 1px solid transparent;  /* 预留边框位置防抖动 */
+    border-radius: 6px;
+}
+
+QToolButton:hover {
+    background: #E3F2FD;  /* Material Design 浅蓝 */
+    border-color: #BBDEFB;
+}
+
+QToolButton:pressed {
+    background: #BBDEFB;
+    border-color: #90CAF9;
+}
+
+/* 选中状态 */
+/* 同时设置两个按钮的选中状态 */
+#chatSectionBtn:checked,
+#contactSectionBtn:checked {
+    background: #BBDEFB;
+    border-radius: 6px;
+}
+
+/* 基础样式 */
+QPushButton {
+    background-color: #B399FF;  /* 浅紫色背景 */
+    color: black;              /* 黑色文字 */
+    border: none;             /* 无边框 */
+    border-radius: 4px;       /* 轻微圆角 */
+    padding: 8px 16px;        /* 内边距 */
+    font-family: "Microsoft YaHei"; /* 使用常见中文字体 */
+    font-size: 14px;
+    min-width: 60px;          /* 最小宽度 */
+}
+
+/* 悬停状态 */
+QPushButton:hover {
+    background-color: #A280FF; /* 稍深的紫色 */
+}
+
+/* 按下状态 */
+QPushButton:pressed {
+    background-color: #8F66FF; /* 更深的紫色 */
+    padding-left: 17px;       /* 微调文字位置制造按压感 */
+    padding-top: 9px;
+}

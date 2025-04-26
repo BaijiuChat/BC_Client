@@ -7,19 +7,20 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    _login_Dlg = new LoginDialog(this); // 初始化，设置父窗口
+    _login_Dlg = new LoginDialog(this); // 初始化
     _reg_Dlg = new RegisterDialog(this);
     _reset_Dlg = new ResetDialog(this);
-    setCentralWidget(_login_Dlg); // 设置主窗口有谁
-    // _login_Dlg->show(); // 显示，注意已经不用了
-    // _reg_Dlg->hide(); // 不需要
+    _chat_Dlg = new ChatDialog(this);
+
     _login_Dlg->setWindowFlags(Qt::FramelessWindowHint);
     _reg_Dlg->setWindowFlags(Qt::FramelessWindowHint);
+    _reset_Dlg->setWindowFlags(Qt::FramelessWindowHint);
 
     _stackedWidget = new QStackedWidget(this);
     _stackedWidget->addWidget(_login_Dlg);
     _stackedWidget->addWidget(_reg_Dlg);
     _stackedWidget->addWidget(_reset_Dlg);
+    _stackedWidget->addWidget(_chat_Dlg);
     setCentralWidget(_stackedWidget); // 和先后顺序有关
 
     // 创建注册信号和槽
@@ -27,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_login_Dlg, &LoginDialog::resetRequest, this, &MainWindow::switchToReset);
     connect(_reg_Dlg, &RegisterDialog::cancelRegister, this, &MainWindow::switchToLogin);
     connect(_reset_Dlg, &ResetDialog::cancelReset, this, &MainWindow::switchToLogin);
+    connect(TcpMgr::GetInstance().get(), &TcpMgr::sig_switch_chatdlg, this, &MainWindow::switchToChat);
     connect(_reg_Dlg, &RegisterDialog::registerSucceed, [this](const QString& email){
         switchToLogin();
         _login_Dlg->setEmail(email); // 自动填充邮箱
@@ -45,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
     // ​无父窗口	可能有系统边框（需手动禁用）  	完全无边框
     // ​典型用途	自定义标题栏但保留边框         完全无边框（如游戏界面、悬浮弹窗）
 
-
+    emit TcpMgr::GetInstance()->sig_switch_chatdlg();  // 仅供测试用
 
 }
 
@@ -87,4 +89,10 @@ void MainWindow::switchToLogin()
 void MainWindow::switchToReset()
 {
     _stackedWidget->setCurrentWidget(_reset_Dlg);
+}
+
+void MainWindow::switchToChat()
+{
+    resize(1100, 700);
+    _stackedWidget->setCurrentWidget(_chat_Dlg);
 }

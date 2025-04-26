@@ -11,6 +11,7 @@ LoginDialog::LoginDialog(QWidget *parent)
 
     ui->tip->setProperty("state","normal"); // 设置默认属性，但不会刷新
     repolish(ui->tip); // 刷新属性
+    ui->pwdLineEdit->setEchoMode(QLineEdit::Password);
 
     ui->forgetButton->setStyleSheet(R"(
     QPushButton {

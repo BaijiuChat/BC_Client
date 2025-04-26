@@ -1,4 +1,5 @@
 #include "tcpmgr.h"
+#include "usermgr.h"
 #include <QDebug>
 
 TcpMgr::TcpMgr() : _host(""), _port(0), _messageId(0), _messageLen(0), _recvPending(false)
@@ -12,7 +13,6 @@ TcpMgr::TcpMgr() : _host(""), _port(0), _messageId(0), _messageLen(0), _recvPend
     connect(&_socket,
             QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred),
             this, &TcpMgr::onError);
-
     // 连接发送信号
     connect(this, &TcpMgr::sig_send_data, this, &TcpMgr::slot_sent_data);
 
@@ -147,6 +147,9 @@ void TcpMgr::initHandlers()
         }
 
         // 登录成功
+        UserMgr::GetInstance()->SetUid(jsonObj["uid"].toInt());
+        UserMgr::GetInstance()->SetName(jsonObj["name"].toString());
+        UserMgr::GetInstance()->SetToken(jsonObj["token"].toString());
         qDebug() << "登录成功";
         emit sig_switch_chatdlg();
     });

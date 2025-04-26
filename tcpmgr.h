@@ -14,14 +14,14 @@ class TcpMgr: public QObject, public Singleton<TcpMgr>,
     Q_OBJECT
 public:
     ~TcpMgr();
-
+    TcpMgr();
     // 新增的公共方法
     void connectToHost(const QString &host, quint16 port);
     void disconnect();
     void sendJsonData(ReqId id, const QJsonObject &jsonObj);
 
 private:
-    TcpMgr();
+
     void initHandlers();    // 注册通讯
     void handleMsg(ReqId Id, int len, const QByteArray &data);
     void processBuffer();   // 处理接收缓冲区

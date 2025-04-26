@@ -34,6 +34,7 @@ void HttpMgr::PostHttpReq(QUrl url, QJsonObject json, ReqId req_id, Modules mod)
         }
         // 无错误
         QString res = reply->readAll();
+        // qDebug() << "Raw JSON response:" << res;
         // 发送信号通知完成
         emit self->sig_http_finish(req_id, res, ErrorCodes::SUCCESS, mod);
         reply->deleteLater();

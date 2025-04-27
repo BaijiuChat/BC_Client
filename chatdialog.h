@@ -17,6 +17,8 @@ public:
 
 private:
     Ui::ChatDialog *ui;
+    QAction *searchIcon/*, clearButton*/;
+
     void setupNavigation();
 };
 

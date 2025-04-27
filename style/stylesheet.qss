@@ -1,5 +1,6 @@
-QDialog#LoginDialog, #RegisterDialog, #ResetDialog{
-    background-color:rgb(242, 239, 251)
+QDialog#LoginDialog, #RegisterDialog, #ResetDialog, #ChatDialog,
+#contactListWid, #searchListWid, #messageListView, #textEdit{
+    background: #F9F9F9
 }
 
 #tip[state='normal']{
@@ -55,4 +56,29 @@ QPushButton:pressed {
     background-color: #8F66FF; /* 更深的紫色 */
     padding-left: 17px;       /* 微调文字位置制造按压感 */
     padding-top: 9px;
+}
+
+#textEdit {
+    border: 1px solid #F9F9F9;
+}
+
+#messageListView {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #EEEEEE;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+#contactListWid, #searchListWid，#chatListWid {
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
+    border-right: 1px solid #EEEEEE;
+}
+
+#searchWid {
+    border-top: none;
+    border-left: none;
+    border-bottom: none;
+    border-right: 1px solid #EEEEEE;
 }

@@ -349,13 +349,13 @@
        </widget>
       </item>
       <item>
-       <widget class="QListWidget" name="chatListWid"/>
-      </item>
-      <item>
-       <widget class="QListWidget" name="contactListWid"/>
+       <widget class="ChatListWid" name="chatListWid"/>
       </item>
       <item>
        <widget class="QListWidget" name="searchListWid"/>
+      </item>
+      <item>
+       <widget class="QListWidget" name="contactListWid"/>
       </item>
      </layout>
     </widget>
@@ -855,6 +855,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ChatListWid</class>
+   <extends>QListWidget</extends>
+   <header>chatlistwid.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

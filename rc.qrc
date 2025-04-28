@@ -19,6 +19,6 @@
         <file>avatars/avatar4.png</file>
         <file>avatars/avatar5.png</file>
         <file>avatars/avatar6.png</file>
-        <file>avatars/avatar7.png</file>
+        <file>avatars/default_avatar.png</file>
     </qresource>
 </RCC>

@@ -50,7 +50,7 @@ void ChatItemWidget::setSelected(bool selected)
     } else {
         setStyleSheet(
             "QWidget {"
-            "   background-color: white;"  // 白色背景
+            "   background-color: transparent;"  // 白色背景
             "   border-radius: 4px;"
             "}"
             );
@@ -61,7 +61,7 @@ void ChatItemWidget::setSelected(bool selected)
 
         // 恢复未读消息样式
         ui->m_unreadLabel->setStyleSheet(
-            "background-color: #FF3B30;"  // 红色背景
+            "background-color: #C7C7C7;"  // 红色背景
             "color: white;"               // 白色文本
             "border-radius: 8px;"         // 圆角
             "padding: 0 4px;"             // 水平内边距

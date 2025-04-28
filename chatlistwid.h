@@ -2,6 +2,7 @@
 #define CHATLISTWID_H
 
 #include <QListWidget>
+#include <QPropertyAnimation>
 #include "chatitemdata.h"
 
 class ChatListWid : public QListWidget
@@ -26,6 +27,14 @@ public:
     // 返回当前选中的会话项索引
     int currentChatIndex() const;
 
+protected:
+    void wheelEvent(QWheelEvent *event) override; // 重写滚轮事件
+    void enterEvent(QEnterEvent *event) override;      // 鼠标进入事件
+    void leaveEvent(QEvent *event) override;      // 鼠标离开事件
+
+private slots:
+    void onScrollBarValueChanged(int value);      // 滚动条值变化槽
+
 private:
     // 存储会话数据
     QVector<ChatItemData> m_chatItems;
@@ -34,6 +43,9 @@ private:
     void initUI();
     // 创建测试数据
     QVector<ChatItemData> createTestData();
+
+    QPropertyAnimation *m_scrollAnimation;        // 滚动动画
+    int m_targetScrollValue;                      // 目标滚动值
 };
 
 #endif // CHATLISTWID_H

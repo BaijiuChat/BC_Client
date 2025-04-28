@@ -6,7 +6,7 @@
 #include <QDate>
 
 ChatItemWidget::ChatItemWidget(const ChatItemData &data, QWidget *parent)
-    : QWidget(parent), m_data(data), m_isSelected(false)
+    : QWidget(parent), ui(new Ui::ChatItemWidget), m_data(data), m_isSelected(false)
 {
     ui->setupUi(this);
     initUI();
@@ -32,15 +32,17 @@ ChatItemData ChatItemWidget::getData() const
 void ChatItemWidget::setSelected(bool selected)
 {
     m_isSelected = selected;
-    if(m_isSelected){
+
+    // 根据选中状态更新背景色
+    if (selected) {
         setStyleSheet(
             "QWidget {"
             "   background-color: #A2A2FE;" // 紫色背景
             "   border-radius: 4px;"
-            "   color: #CFCFCF;"            // 白色文本
+            "   color: white;"              // 白色文本
             "}"
-            "QLabel { color: #CFCFCF; }"     // 所有标签文本变白
-        );
+            "QLabel { color: white; }"     // 所有标签文本变白
+            );
         // 消息预览文本保持灰白色
         ui->m_messageLabel->setStyleSheet("color: rgba(255, 255, 255, 0.8); font-size: 9pt;");
         // 时间文本保持灰白色
@@ -48,10 +50,10 @@ void ChatItemWidget::setSelected(bool selected)
     } else {
         setStyleSheet(
             "QWidget {"
-            "   background-color: transparent;"  // 白色背景
+            "   background-color: white;"  // 白色背景
             "   border-radius: 4px;"
             "}"
-        );
+            );
         // 恢复默认文本颜色
         ui->m_nameLabel->setStyleSheet("");
         ui->m_messageLabel->setStyleSheet("color: #666666; font-size: 9pt;");
@@ -59,12 +61,12 @@ void ChatItemWidget::setSelected(bool selected)
 
         // 恢复未读消息样式
         ui->m_unreadLabel->setStyleSheet(
-            "background-color: #C7C7C7;"  // 灰色背景
+            "background-color: #FF3B30;"  // 红色背景
             "color: white;"               // 白色文本
             "border-radius: 8px;"         // 圆角
             "padding: 0 4px;"             // 水平内边距
             "font-size: 8pt;"             // 字体大小
-        );
+            );
     }
 }
 
@@ -89,11 +91,11 @@ void ChatItemWidget::loadData()
     if(avatar.isNull()){
         avatar = QPixmap(":/LogReg/avatars/default_avatar.png");
         if(avatar.isNull()){
-            avatar = QPixmap(50, 50);
+            avatar = QPixmap(40, 40);
             avatar.fill(Qt::lightGray);
         }
     }
-    ui->m_avatarLabel->setPixmap(createCircularPixmap(avatar, 50));
+    ui->m_avatarLabel->setPixmap(createCircularPixmap(avatar, 40));
     // 设置标题
     ui->m_nameLabel->setText(m_data.name);
     // 设置最后一条消息
@@ -113,15 +115,15 @@ void ChatItemWidget::updateNotificationStatus()
     }
     else {
         ui->m_mutedLabel->hide();
-    }
-    // 处理99+
-    if (m_data.unreadCount > 0){
-        QString unreadText = m_data.unreadCount > 99 ? "99+" : QString::number(m_data.unreadCount);
-        ui->m_unreadLabel->setText(unreadText);
-        ui->m_unreadLabel->show();
-    }
-    else {
-        ui->m_unreadLabel->hide();
+        // 处理99+
+        if (m_data.unreadCount > 0){
+            QString unreadText = m_data.unreadCount > 99 ? "99+" : QString::number(m_data.unreadCount);
+            ui->m_unreadLabel->setText(unreadText);
+            ui->m_unreadLabel->show();
+        }
+        else {
+            ui->m_unreadLabel->hide();
+        }
     }
 }
 

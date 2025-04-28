@@ -65,7 +65,7 @@ void ChatListWid::addChatItem(const ChatItemData &data)
     m_chatItems.append(data);
     // 创建QListWidget对象
     QListWidgetItem *item = new QListWidgetItem(this);
-    item->setSizeHint(QSize(width(), 60)); // 设置项高度
+    item->setSizeHint(QSize(width(), 75)); // 设置项高度
     // 添加对象
     addItem(item);
     // 创建自定义widget绑定QListWidgetItem
@@ -112,18 +112,21 @@ void ChatListWid::initUI()
     // 应用样式表
     setStyleSheet(
         "QListWidget {"
-        "   background-color: transparent;"
+        "   background-color: white;"
         "   border: none;"
         "}"
         "QListWidget::item {"
-        "   background-color: transparent;"
+        "   background-color: white;"
         "   border-radius: 4px;"
         "   margin: 2px 5px;"
+        "}"
+        "QListWidget::item:selected {"
+        "   background-color: #A2A2FE;" // 紫色背景
         "}"
         "QListWidget::item:hover:!selected {"
         "   background-color: #F0F0F0;" // 悬停时淡灰色背景
         "}"
-    );
+        );
 
     // 连接选择变化信号（换聊天）
     connect(this, &QListWidget::currentItemChanged, [this](QListWidgetItem *current, QListWidgetItem *previous) {

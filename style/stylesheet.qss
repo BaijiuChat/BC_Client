@@ -18,7 +18,7 @@ QToolButton {
 
 QToolButton:hover {
     background: #E3F2FD;  /* Material Design 浅蓝 */
-    border-color: #BBDEFB;
+    border-color: #BBDEFB    ;
 }
 
 QToolButton:pressed {
@@ -69,7 +69,7 @@ QPushButton:pressed {
     border-bottom: 1px solid #EEEEEE;
 }
 
-#contactListWid, #searchListWid，#chatListWid {
+#contactListWid, #searchListWid, #chatListWid {
     border-top: none;
     border-bottom: none;
     border-left: none;
@@ -81,4 +81,17 @@ QPushButton:pressed {
     border-left: none;
     border-bottom: none;
     border-right: 1px solid #EEEEEE;
+}
+
+/* 为ChatItemWidget添加专属样式 */
+#chatListWid QWidget {
+    border-radius: 4px;
+}
+
+/* 确保选中项覆盖整个区域 */
+#chatListWid QListWidgetItem:selected,
+#chatListWid QListWidgetItem:selected > QWidget {
+    background-color: #A2A2FE;
+    margin: 0px;
+    padding: 0px;
 }

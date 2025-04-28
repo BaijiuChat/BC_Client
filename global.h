@@ -67,6 +67,12 @@ enum ErrorCodes {
     UnknownError = 2006         // 未定义的错误（建议改为3003）
 };
 
+enum ChatUIMode{
+    ChatMode,       // 聊天模式
+    SearchMode,     // 搜索模式
+    ContactMode     // 联系人模式
+};
+
 struct ServerInfo{
     QString Host;
     QString Port;

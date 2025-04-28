@@ -5,19 +5,14 @@
 ChatDialog::ChatDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::ChatDialog)
+    , _mode(ChatUIMode::ChatMode)
+    , _state(ChatUIMode::ChatMode)
 {
     ui->setupUi(this);
     // 设置图标
     setupNavigation();
-
-    connect(ui->searchEdit, &QLineEdit::textChanged, [=](const QString &text){
-        // clearButton->setVisible(!text.isEmpty());
-        // 当清空文本时自动切换回聊天列表
-        if(text.isEmpty()) {
-            ui->searchListWid->hide();
-            ui->chatListWid->show();
-        }
-    });
+    // 搜索的信号与槽
+    initSearchSystem();
     // 点击清除按钮（弃用）
     // connect(clearButton, &QAction::triggered, [=](){
     //     ui->searchEdit->clear();
@@ -67,6 +62,31 @@ void ChatDialog::setupNavigation()
 
     // 3. 默认选中
     ui->chatSectionBtn->setChecked(true);
+}
+
+void ChatDialog::initSearchSystem() {
+    // 初始化定时器
+    searchTimer = new QTimer(this);
+    searchTimer->setSingleShot(true);
+    searchTimer->setInterval(500); // 500ms防抖间隔
+
+    // 连接信号槽
+    connect(ui->searchEdit, &QLineEdit::textChanged, [=](const QString &text){
+        // 即时UI切换逻辑
+        _mode = text.isEmpty() ? ChatUIMode::ChatMode : ChatUIMode::SearchMode;
+        ui->searchListWid->setVisible(_mode == ChatUIMode::SearchMode);
+        ui->chatListWid->setVisible(_mode == ChatUIMode::ChatMode);
+
+        // 触发防抖搜索
+        searchTimer->start();
+    });
+
+    // 防抖搜索逻辑
+    // connect(searchTimer, &QTimer::timeout, [=](){
+    //     if(_mode == ChatUIMode::SearchMode) {
+    //         refreshSearchList(ui->searchEdit->text());
+    //     }
+    // });
 }
 
 ChatDialog::~ChatDialog()

@@ -43,8 +43,12 @@ private:
     QVector<ChatItemData> m_chatItems;
     QPropertyAnimation *m_scrollAnimation;        // 滚动动画
     int m_targetScrollValue;                      // 目标滚动值
+    // 加载控制
     QTimer *m_loadTimer; // 延迟加载定时器
+    QSet<int> m_loadedItems; // 跟踪已加载的项索引
+    bool m_isFastScrolling; // 标记快速滚动状态
     static const int MAX_LOAD_PER_CHECK = 10; // 每次最多加载 10 项
+    static const int MAX_LOAD_PER_CHECK_FAST = 5; // 快速滚动时降低到 5
 
     // 初始化UI
     void initUI();

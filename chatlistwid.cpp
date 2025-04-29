@@ -6,9 +6,10 @@
 #include <QDir>
 #include <QRandomGenerator>
 #include <algorithm>
+#include <QDebug>
 
 ChatListWid::ChatListWid(QWidget *parent)
-    : QListWidget(parent)
+    : QListWidget(parent), m_isFastScrolling(false)
 {
     initUI();
     m_loadTimer = new QTimer(this);
@@ -25,6 +26,7 @@ void ChatListWid::loadChatItems(const QVector<ChatItemData> &items)
 {
     clear();
     m_chatItems.clear();
+    m_loadedItems.clear();
     m_chatItems = items;
     sortChatItems();
 
@@ -45,33 +47,46 @@ void ChatListWid::loadChatItems(const QVector<ChatItemData> &items)
             ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
             if (widget && !widget->isFullyLoaded()) {
                 widget->loadFullData();
+                m_loadedItems.insert(i);
             }
         }
     }
 
-    // 检查视口内其他项
     checkVisibleItems();
 }
 
 void ChatListWid::checkVisibleItems()
 {
     QRect viewportRect = viewport()->rect();
+    // 修复：移除错误的 QRegion 调用，改用 QRect 检测可见性
     int loadedCount = 0;
+    int maxLoad = m_isFastScrolling ? MAX_LOAD_PER_CHECK_FAST : MAX_LOAD_PER_CHECK;
+
+    // 扩展视口范围（上下各 72 像素）
+    viewportRect.adjust(0, -72, 0, 72);
+
+    QSet<int> currentLoadedItems;
 
     for (int i = 0; i < count(); ++i) {
         QListWidgetItem *item = this->item(i);
         if (!item)
             continue;
+
         QRect itemRect = visualItemRect(item);
         ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
         if (!widget)
             continue;
 
-        if (viewportRect.intersects(itemRect)) {
+        // 优化后的可见性检测（仅使用 viewportRect）
+        bool isVisible = viewportRect.intersects(itemRect);
+        if (isVisible) {
             // 可见项：加载完整内容
-            if (!widget->isFullyLoaded() && loadedCount < MAX_LOAD_PER_CHECK) {
+            if (!widget->isFullyLoaded() && loadedCount < maxLoad) {
                 widget->loadFullData();
+                currentLoadedItems.insert(i);
                 ++loadedCount;
+            } else if (widget->isFullyLoaded()) {
+                currentLoadedItems.insert(i);
             }
         } else {
             // 不可见项：卸载动态内容
@@ -80,12 +95,15 @@ void ChatListWid::checkVisibleItems()
             }
         }
     }
+
+    m_loadedItems = currentLoadedItems;
+    m_isFastScrolling = false; // 重置快速滚动状态
 }
 
 bool ChatListWid::viewportEvent(QEvent *event)
 {
     if (event->type() == QEvent::Paint || event->type() == QEvent::Resize) {
-        m_loadTimer->start(50); // 缩短延迟到 50ms
+        m_loadTimer->start(5);
     }
     return QListWidget::viewportEvent(event);
 }
@@ -117,9 +135,9 @@ void ChatListWid::wheelEvent(QWheelEvent *event)
     m_scrollAnimation->setEndValue(m_targetScrollValue);
     m_scrollAnimation->start();
 
-    // 滚动时直接检查可见项
-    checkVisibleItems();
-    m_loadTimer->start(50); // 备用定时器
+    // 统一触发逻辑，仅启动定时器
+    m_isFastScrolling = true; // 标记为快速滚动
+    m_loadTimer->start(5);
 
     event->accept();
 }
@@ -130,8 +148,8 @@ void ChatListWid::onScrollBarValueChanged(int value)
         return;
     }
     m_targetScrollValue = value;
-    checkVisibleItems(); // 直接检查
-    m_loadTimer->start(50);
+    m_isFastScrolling = true;
+    m_loadTimer->start(5);
     viewport()->update();
 }
 
@@ -170,6 +188,7 @@ void ChatListWid::addChatItem(const ChatItemData &data)
     QRect itemRect = visualItemRect(item);
     if (viewportRect.intersects(itemRect)) {
         widget->loadFullData();
+        m_loadedItems.insert(insertIndex);
     }
 }
 
@@ -186,6 +205,9 @@ void ChatListWid::updateChatItem(int index, const ChatItemData &data)
             if (widget) {
                 widget->updateData(data);
                 widget->setSelected(currentRow() == index);
+                if (m_loadedItems.contains(index) && !widget->isFullyLoaded()) {
+                    widget->loadFullData();
+                }
             }
         }
         return;
@@ -201,6 +223,7 @@ void ChatListWid::removeChatItem(int index)
         return;
     if (index < m_chatItems.size())
         m_chatItems.removeAt(index);
+    m_loadedItems.remove(index);
     QListWidgetItem *item = takeItem(index);
     delete item;
 }
@@ -315,6 +338,7 @@ void ChatListWid::initUI()
                     currChatWidget->setSelected(true);
                     if (!currChatWidget->isFullyLoaded()) {
                         currChatWidget->loadFullData();
+                        m_loadedItems.insert(this->row(current));
                     }
                 }
             }

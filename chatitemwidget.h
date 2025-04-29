@@ -20,13 +20,20 @@ public:
     void updateData(const ChatItemData &data);
     // 获取聊天数据，禁止外部修改内部数据
     ChatItemData getData() const;
-    //
+    // 选中效果
     void setSelected(bool selected);
+
+    // 懒加载完整内容
+    void loadFullData();
+    // 检查是否已完整加载
+    bool isFullyLoaded() const { return m_isFullyLoaded; }
+
 
 private:
     Ui::ChatItemWidget *ui;
     ChatItemData m_data; // 聊天项数据
     bool m_isSelected; // 是否选中
+    bool m_isFullyLoaded; // 是否已完整加载
 
     // 初始化UI
     void initUI();

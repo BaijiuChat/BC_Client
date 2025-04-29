@@ -3,6 +3,7 @@
 
 #include <QListWidget>
 #include <QPropertyAnimation>
+#include <QTimer>
 #include "chatitemdata.h"
 
 class ChatListWid : public QListWidget
@@ -31,21 +32,27 @@ protected:
     void wheelEvent(QWheelEvent *event) override; // 重写滚轮事件
     void enterEvent(QEnterEvent *event) override;      // 鼠标进入事件
     void leaveEvent(QEvent *event) override;      // 鼠标离开事件
+    bool viewportEvent(QEvent *event) override;
 
 private slots:
     void onScrollBarValueChanged(int value);      // 滚动条值变化槽
+    void checkVisibleItems(); // 检查可见项并触发懒加载
 
 private:
     // 存储会话数据
     QVector<ChatItemData> m_chatItems;
+    QPropertyAnimation *m_scrollAnimation;        // 滚动动画
+    int m_targetScrollValue;                      // 目标滚动值
+    QTimer *m_loadTimer; // 延迟加载定时器
 
     // 初始化UI
     void initUI();
     // 创建测试数据
     QVector<ChatItemData> createTestData();
-
-    QPropertyAnimation *m_scrollAnimation;        // 滚动动画
-    int m_targetScrollValue;                      // 目标滚动值
+    // 按时间排序（内部方法）
+    void sortChatItems();
+    // 查找插入位置
+    int findInsertPosition(const ChatItemData &data) const;
 };
 
 #endif // CHATLISTWID_H

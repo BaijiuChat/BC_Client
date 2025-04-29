@@ -44,6 +44,7 @@ private:
     QPropertyAnimation *m_scrollAnimation;        // 滚动动画
     int m_targetScrollValue;                      // 目标滚动值
     QTimer *m_loadTimer; // 延迟加载定时器
+    static const int MAX_LOAD_PER_CHECK = 10; // 每次最多加载 10 项
 
     // 初始化UI
     void initUI();

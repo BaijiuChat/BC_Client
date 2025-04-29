@@ -1,6 +1,5 @@
 #include "chatlistwid.h"
 #include "chatitemwidget.h"
-#include "qcoreevent.h"
 #include "qevent.h"
 
 #include <QScrollBar>
@@ -12,11 +11,9 @@ ChatListWid::ChatListWid(QWidget *parent)
     : QListWidget(parent)
 {
     initUI();
-    // 初始化加载定时器
     m_loadTimer = new QTimer(this);
     m_loadTimer->setSingleShot(true);
     connect(m_loadTimer, &QTimer::timeout, this, &ChatListWid::checkVisibleItems);
-    // 加载测试数据
     loadChatItems(createTestData());
 }
 
@@ -40,22 +37,46 @@ void ChatListWid::loadChatItems(const QVector<ChatItemData> &items)
             setItemWidget(listItem, widget);
         }
     }
-    // 触发初始可见项加载
+
+    // 完全加载前 15 项
+    for (int i = 0; i < qMin(15, count()); ++i) {
+        QListWidgetItem *item = this->item(i);
+        if (item) {
+            ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
+            if (widget && !widget->isFullyLoaded()) {
+                widget->loadFullData();
+            }
+        }
+    }
+
+    // 检查视口内其他项
     checkVisibleItems();
 }
 
 void ChatListWid::checkVisibleItems()
 {
     QRect viewportRect = viewport()->rect();
+    int loadedCount = 0;
+
     for (int i = 0; i < count(); ++i) {
         QListWidgetItem *item = this->item(i);
         if (!item)
             continue;
         QRect itemRect = visualItemRect(item);
+        ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
+        if (!widget)
+            continue;
+
         if (viewportRect.intersects(itemRect)) {
-            ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
-            if (widget && !widget->isFullyLoaded()) {
+            // 可见项：加载完整内容
+            if (!widget->isFullyLoaded() && loadedCount < MAX_LOAD_PER_CHECK) {
                 widget->loadFullData();
+                ++loadedCount;
+            }
+        } else {
+            // 不可见项：卸载动态内容
+            if (widget->isFullyLoaded()) {
+                widget->unloadData();
             }
         }
     }
@@ -64,12 +85,44 @@ void ChatListWid::checkVisibleItems()
 bool ChatListWid::viewportEvent(QEvent *event)
 {
     if (event->type() == QEvent::Paint || event->type() == QEvent::Resize) {
-        // 延迟触发加载，防止频繁调用
-        m_loadTimer->start(100);
+        m_loadTimer->start(50); // 缩短延迟到 50ms
     }
     return QListWidget::viewportEvent(event);
 }
 
+void ChatListWid::wheelEvent(QWheelEvent *event)
+{
+    QScrollBar *scrollBar = verticalScrollBar();
+    if (!scrollBar) {
+        event->ignore();
+        return;
+    }
+
+    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
+        m_scrollAnimation->stop();
+    }
+
+    QPoint numPixels = event->pixelDelta();
+    QPoint numDegrees = event->angleDelta();
+
+    int delta = 0;
+    if (!numPixels.isNull()) {
+        delta = numPixels.y();
+    } else if (!numDegrees.isNull()) {
+        delta = numDegrees.y();
+    }
+
+    m_targetScrollValue = scrollBar->value() - delta;
+    m_scrollAnimation->setStartValue(scrollBar->value());
+    m_scrollAnimation->setEndValue(m_targetScrollValue);
+    m_scrollAnimation->start();
+
+    // 滚动时直接检查可见项
+    checkVisibleItems();
+    m_loadTimer->start(50); // 备用定时器
+
+    event->accept();
+}
 
 void ChatListWid::onScrollBarValueChanged(int value)
 {
@@ -77,11 +130,11 @@ void ChatListWid::onScrollBarValueChanged(int value)
         return;
     }
     m_targetScrollValue = value;
-    m_loadTimer->start(100); // 滚动时延迟加载
+    checkVisibleItems(); // 直接检查
+    m_loadTimer->start(50);
     viewport()->update();
 }
 
-// 以下方法保持不变或沿用之前的排序逻辑
 void ChatListWid::sortChatItems()
 {
     std::sort(m_chatItems.begin(), m_chatItems.end(),
@@ -113,7 +166,6 @@ void ChatListWid::addChatItem(const ChatItemData &data)
     ChatItemWidget *widget = new ChatItemWidget(data, this);
     setItemWidget(item, widget);
 
-    // 如果新项在视口中，立即加载
     QRect viewportRect = viewport()->rect();
     QRect itemRect = visualItemRect(item);
     if (viewportRect.intersects(itemRect)) {
@@ -168,31 +220,6 @@ ChatItemData ChatListWid::getChatItemData(int index) const
 int ChatListWid::currentChatIndex() const
 {
     return currentRow();
-}
-
-void ChatListWid::wheelEvent(QWheelEvent *event)
-{
-    QScrollBar *scrollBar = verticalScrollBar();
-    if (!scrollBar) {
-        event->ignore();
-        return;
-    }
-    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
-        m_scrollAnimation->stop();
-    }
-    QPoint numPixels = event->pixelDelta();
-    QPoint numDegrees = event->angleDelta();
-    int delta = 0;
-    if (!numPixels.isNull()) {
-        delta = numPixels.y();
-    } else if (!numDegrees.isNull()) {
-        delta = numDegrees.y();
-    }
-    m_targetScrollValue = scrollBar->value() - delta;
-    m_scrollAnimation->setStartValue(scrollBar->value());
-    m_scrollAnimation->setEndValue(m_targetScrollValue);
-    m_scrollAnimation->start();
-    event->accept();
 }
 
 void ChatListWid::enterEvent(QEnterEvent *event)
@@ -297,7 +324,6 @@ void ChatListWid::initUI()
 
 QVector<ChatItemData> ChatListWid::createTestData()
 {
-    // 保持原有测试数据生成逻辑
     QVector<ChatItemData> testData;
     testData.reserve(100);
 

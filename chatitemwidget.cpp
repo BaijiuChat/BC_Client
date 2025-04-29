@@ -5,13 +5,16 @@
 #include <QPainterPath>
 #include <QDate>
 #include <QFontMetrics>
+#include <QCache>
+
+// 定义静态头像缓存
+QCache<QString, QPixmap> ChatItemWidget::avatarCache(100); // 缓存 100 个头像
 
 ChatItemWidget::ChatItemWidget(const ChatItemData &data, QWidget *parent)
     : QWidget(parent), ui(new Ui::ChatItemWidget), m_data(data), m_isSelected(false), m_isFullyLoaded(false)
 {
     ui->setupUi(this);
     initUI();
-    // 仅加载名称
     QFontMetrics nameMetrics(ui->m_nameLabel->font());
     QString nameElided = nameMetrics.elidedText(m_data.name, Qt::ElideRight, ui->m_nameLabel->width());
     ui->m_nameLabel->setText(nameElided);
@@ -25,14 +28,14 @@ ChatItemWidget::~ChatItemWidget()
 void ChatItemWidget::updateData(const ChatItemData &data)
 {
     m_data = data;
-    m_isFullyLoaded = false; // 重置加载状态
-    // 更新名称
+    m_isFullyLoaded = false;
     QFontMetrics nameMetrics(ui->m_nameLabel->font());
     QString nameElided = nameMetrics.elidedText(m_data.name, Qt::ElideRight, ui->m_nameLabel->width());
     ui->m_nameLabel->setText(nameElided);
-    // 如果已在视口中，立即加载完整内容
     if (isVisible()) {
         loadFullData();
+    } else {
+        unloadData();
     }
 }
 
@@ -41,16 +44,24 @@ void ChatItemWidget::loadFullData()
     if (m_isFullyLoaded)
         return;
 
-    // 加载头像
-    QPixmap avatar(m_data.avatarPath);
-    if (avatar.isNull()) {
-        avatar = QPixmap(":/LogReg/avatars/default_avatar.png");
+    // 加载头像（优先从缓存获取）
+    QPixmap avatar;
+    if (avatarCache.contains(m_data.avatarPath)) {
+        avatar = *avatarCache[m_data.avatarPath];
+    } else {
+        avatar = QPixmap(m_data.avatarPath);
         if (avatar.isNull()) {
-            avatar = QPixmap(40, 40);
-            avatar.fill(Qt::lightGray);
+            avatar = QPixmap(":/LogReg/avatars/default_avatar.png");
+            if (avatar.isNull()) {
+                avatar = QPixmap(40, 40);
+                avatar.fill(Qt::lightGray);
+            }
         }
+        QPixmap *cachedAvatar = new QPixmap(createCircularPixmap(avatar, 40));
+        avatarCache.insert(m_data.avatarPath, cachedAvatar);
+        avatar = *cachedAvatar;
     }
-    ui->m_avatarLabel->setPixmap(createCircularPixmap(avatar, 40));
+    ui->m_avatarLabel->setPixmap(avatar);
 
     // 加载消息
     QFontMetrics msgMetrics(ui->m_messageLabel->font());
@@ -66,6 +77,20 @@ void ChatItemWidget::loadFullData()
     m_isFullyLoaded = true;
 }
 
+void ChatItemWidget::unloadData()
+{
+    if (!m_isFullyLoaded)
+        return;
+
+    ui->m_avatarLabel->setPixmap(QPixmap()); // 清空头像
+    ui->m_messageLabel->setText("");
+    ui->m_timeLabel->setText("");
+    ui->m_unreadLabel->hide();
+    ui->m_mutedLabel->hide();
+
+    m_isFullyLoaded = false;
+}
+
 void ChatItemWidget::setSelected(bool selected)
 {
     m_isSelected = selected;
@@ -77,7 +102,7 @@ void ChatItemWidget::setSelected(bool selected)
             "   color: white;"
             "}"
             "QLabel { color: white; }"
-            );
+        );
         ui->m_messageLabel->setStyleSheet("color: rgba(255, 255, 255, 0.8); font-size: 9pt;");
         ui->m_timeLabel->setStyleSheet("color: rgba(255, 255, 255, 0.8); font-size: 8pt;");
     } else {
@@ -86,7 +111,7 @@ void ChatItemWidget::setSelected(bool selected)
             "   background-color: transparent;"
             "   border-radius: 4px;"
             "}"
-            );
+        );
         ui->m_nameLabel->setStyleSheet("");
         ui->m_messageLabel->setStyleSheet("color: #666666; font-size: 9pt;");
         ui->m_timeLabel->setStyleSheet("color: #888888; font-size: 8pt;");
@@ -96,7 +121,7 @@ void ChatItemWidget::setSelected(bool selected)
             "border-radius: 8px;"
             "padding: 0 4px;"
             "font-size: 8pt;"
-            );
+        );
     }
 }
 
@@ -109,10 +134,9 @@ void ChatItemWidget::initUI()
         "border-radius: 8px;"
         "padding: 0 4px;"
         "font-size: 8pt;"
-        );
+    );
     ui->m_unreadLabel->hide();
-    // 设置占位符
-    ui->m_avatarLabel->setPixmap(QPixmap()); // 空头像
+    ui->m_avatarLabel->setPixmap(QPixmap());
     ui->m_messageLabel->setText("");
     ui->m_timeLabel->setText("");
 }

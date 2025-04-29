@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QDate>
+#include <QFontMetrics>
 
 ChatItemWidget::ChatItemWidget(const ChatItemData &data, QWidget *parent)
     : QWidget(parent), ui(new Ui::ChatItemWidget), m_data(data), m_isSelected(false)
@@ -96,10 +97,22 @@ void ChatItemWidget::loadData()
         }
     }
     ui->m_avatarLabel->setPixmap(createCircularPixmap(avatar, 40));
-    // 设置标题
-    ui->m_nameLabel->setText(m_data.name);
-    // 设置最后一条消息
-    ui->m_messageLabel->setText(m_data.lastMessage);
+
+    // 设置标题（带省略）
+    QFontMetrics nameMetrics(ui->m_nameLabel->font());
+    QString nameElided = nameMetrics.elidedText(m_data.name, Qt::ElideRight, ui->m_nameLabel->width());
+    ui->m_nameLabel->setText(nameElided);
+
+    // 设置消息（带省略）
+    QFontMetrics msgMetrics(ui->m_messageLabel->font());
+    QString msgElided = msgMetrics.elidedText(m_data.lastMessage, Qt::ElideRight, ui->m_messageLabel->width());
+    ui->m_messageLabel->setText(msgElided);
+
+    // // 设置标题
+    // ui->m_nameLabel->setText(m_data.name);
+    // // 设置最后一条消息
+    // ui->m_messageLabel->setText(m_data.lastMessage);
+
     // 设置时间
     ui->m_timeLabel->setText(formatTime(m_data.lastMessageTime));
     // 更新通知状态

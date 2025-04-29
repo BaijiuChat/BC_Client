@@ -118,7 +118,7 @@ void ChatListWid::wheelEvent(QWheelEvent *event)
 
     // 计算目标滚动值
     QPoint numPixels = event->pixelDelta();
-    QPoint numDegrees = event->angleDelta()/* /8 */;
+    QPoint numDegrees = event->angleDelta() /* /8 */;
 
     int delta = 0;
     if (!numPixels.isNull()) {
@@ -263,8 +263,9 @@ void ChatListWid::initUI()
 QVector<ChatItemData> ChatListWid::createTestData()
 {
     QVector<ChatItemData> testData;
+    testData.reserve(100); // 预分配空间提高性能
 
-    // 预定义的头像路径(实际应用中应指向真实文件)
+    // 头像路径保持不变
     QStringList avatarPaths = {
         ":/LogReg/avatars/avatar1.png",
         ":/LogReg/avatars/avatar2.png",
@@ -274,84 +275,86 @@ QVector<ChatItemData> ChatListWid::createTestData()
         ":/LogReg/avatars/avatar6.png",
     };
 
-    // 预定义的用户/群组名
-    QStringList names = {
-        "缘宝的宝库",
-        "shao的AI绘画小组",
-        "steam联机交流群",
-        "醉浆草",
-        "产品设计交流群",
-        "前端开发实战",
-        "技术分享",
-        "张三",
-        "李四",
-        "王五",
-        "缘宝的宝库",
-        "shao的AI绘画小组",
-        "steam联机交流群",
-        "醉浆草",
-        "产品设计交流群",
-        "前端开发实战",
-        "技术分享",
-        "张三",
-        "李四",
-        "王五"
+    // 扩展为100个随机中文名（个人+群组）
+    QStringList names;
+    QStringList surnames = {"赵","钱","孙","李","周","吴","郑","王","冯","陈","褚","卫","蒋","沈","韩","杨"};
+    QStringList givenNames = {"伟","芳","娜","秀英","敏","静","丽","强","磊","军","洋","勇","艳","杰","娟","涛"};
+    QStringList groupSuffixes = {"交流群","讨论组","粉丝群","亲友团","同学会","工作群","项目组","游戏群"};
+
+    // 生成60个个人联系人
+    for(int i=0; i<60; ++i) {
+        names.append(surnames[QRandomGenerator::global()->bounded(surnames.size())] +
+                     givenNames[QRandomGenerator::global()->bounded(givenNames.size())]);
+    }
+
+    // 生成40个群组
+    for(int i=0; i<40; ++i) {
+        QString name = surnames[QRandomGenerator::global()->bounded(surnames.size())] +
+                       givenNames[QRandomGenerator::global()->bounded(givenNames.size())] +
+                       "的" + groupSuffixes[QRandomGenerator::global()->bounded(groupSuffixes.size())];
+        names.append(name);
+    }
+
+    // 更丰富的消息模板
+    QStringList messageTemplates = {
+        "你吃饭了吗？",
+        "在吗？有事找你",
+        "[图片]",
+        "[语音消息]",
+        "明天下午3点开会",
+        "这个需求什么时候能完成？",
+        "我马上到",
+        "周末一起出去玩吧",
+        "你看这个链接：https://example.com",
+        "😂😂😂",
+        "好的，没问题",
+        "我再考虑一下",
+        "谢谢！",
+        "你听说了吗？",
+        "最新版本已经发布",
+        "帮我带杯咖啡",
+        "晚上吃什么？",
+        "项目进度怎么样了？",
+        "这个bug怎么解决？",
+        "记得带身份证"
     };
 
-    // 预定义的最后一条消息
-    QStringList lastMessages = {
-        "2分14有啥意思吗",
-        "plato: 好白的西瓜",
-        "白又不是酒: 我也",
-        "别走啊你",
-        "新版UI设计稿已经上传",
-        "React Hooks真香",
-        "下周技术分享会议安排",
-        "周末有空一起吃饭吗？",
-        "项目文档已更新，请查收",
-        "明天开会记得带上材料",
-        "2分14有啥意思吗",
-        "plato: 好白的西瓜",
-        "白又不是酒: 我也",
-        "别走啊你",
-        "新版UI设计稿已经上传",
-        "React Hooks真香",
-        "下周技术分享会议安排",
-        "周末有空一起吃饭吗？",
-        "项目文档已更新，请查收",
-        "明天开会记得带上材料"
-    };
-
-    // 生成10个测试项
+    // 生成100条测试数据
     QDateTime now = QDateTime::currentDateTime();
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 100; ++i) {
         ChatItemData item;
         item.id = i + 1;
-
-        // 轮流使用预定义的头像(简单处理，实际应根据名称hash等方式选择)
         item.avatarPath = avatarPaths[i % avatarPaths.size()];
 
-        // 随机时间(最近7天内)
-        int randomMinutes = QRandomGenerator::global()->bounded(10080); // 7天*24小时*60分钟
+        // 随机时间（最近30天内）
+        int randomMinutes = QRandomGenerator::global()->bounded(43200); // 30天*24小时*60分钟
         item.lastMessageTime = now.addSecs(-randomMinutes * 60);
 
-        // 使用预定义的名称和消息
+        // 随机名称和消息
         item.name = names[i];
-        item.lastMessage = lastMessages[i];
 
-        // 随机设置未读消息数(30%概率有未读消息)
-        if (QRandomGenerator::global()->bounded(100) < 30) {
-            item.unreadCount = QRandomGenerator::global()->bounded(1, 120);
+        // 50%概率显示发送者
+        if (QRandomGenerator::global()->bounded(100) < 50 && !item.name.contains("群")) {
+            QString sender = names[QRandomGenerator::global()->bounded(60)] + ": ";
+            item.lastMessage = sender + messageTemplates[QRandomGenerator::global()->bounded(messageTemplates.size())];
+        } else {
+            item.lastMessage = messageTemplates[QRandomGenerator::global()->bounded(messageTemplates.size())];
         }
 
-        // 随机设置免打扰状态(20%概率开启)
-        item.muted = QRandomGenerator::global()->bounded(100) < 20;
+        // 随机未读消息（个人30%概率，群组60%概率）
+        bool isGroup = item.name.contains("群");
+        if (QRandomGenerator::global()->bounded(100) < (isGroup ? 60 : 30)) {
+            item.unreadCount = QRandomGenerator::global()->bounded(1, isGroup ? 150 : 20);
+        }
 
-        // 所有测试项均有效
+        // 免打扰状态（个人10%概率，群组30%概率）
+        item.muted = QRandomGenerator::global()->bounded(100) < (isGroup ? 30 : 10);
+
         item.isValid = true;
-
         testData.append(item);
     }
 
+    // 打乱顺序使数据更随机
+    std::shuffle(testData.begin(), testData.end(), *QRandomGenerator::global());
     return testData;
 }

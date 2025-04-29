@@ -44,13 +44,13 @@
     <number>12</number>
    </property>
    <property name="topMargin">
-    <number>10</number>
+    <number>15</number>
    </property>
    <property name="rightMargin">
     <number>20</number>
    </property>
    <property name="bottomMargin">
-    <number>12</number>
+    <number>15</number>
    </property>
    <item>
     <widget class="QLabel" name="m_avatarLabel">
@@ -93,10 +93,16 @@
      </property>
      <item>
       <widget class="QLabel" name="m_nameLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
-         <bold>true</bold>
+         <pointsize>10</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="styleSheet">
@@ -108,10 +114,30 @@
       </widget>
      </item>
      <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QLabel" name="m_messageLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="font">
         <font>
-         <pointsize>10</pointsize>
+         <pointsize>8</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="styleSheet">
@@ -133,7 +159,7 @@
       <widget class="QLabel" name="m_timeLabel">
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
+         <pointsize>8</pointsize>
         </font>
        </property>
        <property name="styleSheet">
@@ -176,7 +202,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>0</width>
-           <height>27</height>
+           <height>16</height>
           </size>
          </property>
         </spacer>
@@ -184,7 +210,7 @@
        <item>
         <widget class="QLabel" name="m_unreadLabel">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -226,8 +252,8 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>16</width>
-           <height>16</height>
+           <width>12</width>
+           <height>12</height>
           </size>
          </property>
          <property name="font">

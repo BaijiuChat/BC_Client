@@ -36,7 +36,7 @@ private:
     ChatItemData m_data; // 聊天项数据
     bool m_isSelected; // 是否选中
     bool m_isFullyLoaded; // 是否已完整加载
-    static QCache<QString, QPixmap> avatarCache; // 缓存 100 个头像
+    static QCache<QString, QPixmap> avatarCache; // 缓存头像
 
     // 初始化UI
     void initUI();

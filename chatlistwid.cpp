@@ -5,16 +5,17 @@
 #include <QScrollBar>
 #include <QRandomGenerator>
 #include <algorithm>
+#include <QCoreApplication>
 #include <QDebug>
 
 // 构造函数，初始化聊天列表控件
 ChatListWid::ChatListWid(QWidget *parent)
-    : QListWidget(parent), m_isFastScrolling(false)
+    : QListWidget(parent), m_isFastScrolling(false), m_loadRate(100), m_timerInterval(10)
 {
     initUI();
     m_loadTimer = new QTimer(this);
     m_loadTimer->setSingleShot(true);
-    m_loadTimer->setInterval(50); // 延长定时器间隔
+    m_loadTimer->setInterval(m_timerInterval); // 延长定时器间隔
     connect(m_loadTimer, &QTimer::timeout, this, &ChatListWid::checkVisibleItems);
     connect(this, &QListWidget::currentItemChanged, this, &ChatListWid::onCurrentItemChanged);
     loadChatItems(createTestData());
@@ -23,6 +24,19 @@ ChatListWid::ChatListWid(QWidget *parent)
 // 析构函数
 ChatListWid::~ChatListWid()
 {
+}
+
+// 设置加载速率
+void ChatListWid::setLoadRate(int itemsPerSecond)
+{
+    m_loadRate = qMax(1, itemsPerSecond);
+}
+
+// 设置定时器间隔
+void ChatListWid::setTimerInterval(int milliseconds)
+{
+    m_timerInterval = qMax(10, milliseconds);
+    m_loadTimer->setInterval(m_timerInterval);
 }
 
 // 加载聊天项列表
@@ -70,11 +84,12 @@ void ChatListWid::checkVisibleItems()
     endIndex = qMin(endIndex, count() - 1);
     startIndex = qMax(0, startIndex - 1); // 预加载上一项
 
+    // 根据加载速率计算最大加载数量
+    int maxLoad = m_isFastScrolling ? MAX_LOAD_PER_CHECK_FAST : qMin(MAX_LOAD_PER_CHECK, m_loadRate * m_timerInterval / 1000);
     int loadedCount = 0;
-    int maxLoad = m_isFastScrolling ? MAX_LOAD_PER_CHECK_FAST : MAX_LOAD_PER_CHECK;
     QSet<int> currentLoadedItems;
 
-    // 遍历可见范围
+    // 加载可见项
     for (int i = startIndex; i <= endIndex && i < count(); ++i) {
         QListWidgetItem *item = this->item(i);
         if (!item)
@@ -108,24 +123,23 @@ void ChatListWid::checkVisibleItems()
         } else {
             if (widget->isFullyLoaded()) {
                 widget->unloadData();
-                // 可选：销毁不可见控件以进一步释放内存
-                // setItemWidget(item, nullptr);
-                // delete widget;
+                // 销毁不可见控件
+                setItemWidget(item, nullptr);
+                delete widget;
             }
         }
     }
 
-    // 卸载其他已加载但不可见的项
+    // 清理其他已加载但不可见的项
     for (int i : m_loadedItems) {
         if (!currentLoadedItems.contains(i) && i >= 0 && i < count()) {
             QListWidgetItem *item = this->item(i);
             if (item) {
                 ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
-                if (widget && widget->isFullyLoaded()) {
+                if (widget) {
                     widget->unloadData();
-                    // 可选：销毁控件
-                    // setItemWidget(item, nullptr);
-                    // delete widget;
+                    setItemWidget(item, nullptr);
+                    delete widget;
                 }
             }
         }
@@ -133,6 +147,9 @@ void ChatListWid::checkVisibleItems()
 
     m_loadedItems = currentLoadedItems;
     m_isFastScrolling = false;
+
+    // 强制处理事件，促进内存回收
+    QCoreApplication::processEvents();
 }
 
 // 视口事件处理
@@ -155,21 +172,43 @@ void ChatListWid::wheelEvent(QWheelEvent *event)
         return;
     }
 
+    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
+        m_scrollAnimation->stop();
+    }
+
     int delta = 0;
     QPoint numPixels = event->pixelDelta();
     QPoint numDegrees = event->angleDelta();
     if (!numPixels.isNull()) {
         delta = numPixels.y();
     } else if (!numDegrees.isNull()) {
-        delta = numDegrees.y() / 2; // 标准化角度增量
+        delta = numDegrees.y(); // 标准化角度增量
     }
 
-    scrollBar->setValue(scrollBar->value() - delta);
+    m_targetScrollValue = scrollBar->value() - delta;
+    m_scrollAnimation->setStartValue(scrollBar->value());
+    m_scrollAnimation->setEndValue(m_targetScrollValue);
+    m_scrollAnimation->start();
+
     m_isFastScrolling = true;
     if (!m_loadTimer->isActive()) {
         m_loadTimer->start();
     }
     event->accept();
+}
+
+// 滚动条值改变处理
+void ChatListWid::onScrollBarValueChanged(int value)
+{
+    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
+        return;
+    }
+    m_targetScrollValue = value;
+    m_isFastScrolling = true;
+    if (!m_loadTimer->isActive()) {
+        m_loadTimer->start();
+    }
+    viewport()->update();
 }
 
 // 当前项改变处理
@@ -321,7 +360,12 @@ void ChatListWid::initUI()
     if (scrollBar) {
         scrollBar->setSingleStep(10);
         scrollBar->setPageStep(50);
+        connect(scrollBar, &QScrollBar::valueChanged, this, &ChatListWid::onScrollBarValueChanged);
     }
+
+    m_scrollAnimation = new QPropertyAnimation(scrollBar, "value", this);
+    m_scrollAnimation->setDuration(300);
+    m_scrollAnimation->setEasingCurve(QEasingCurve::OutCubic);
 
     setStyleSheet(
         "QListWidget {"

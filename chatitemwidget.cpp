@@ -8,7 +8,7 @@
 #include <QCache>
 
 // 定义静态头像缓存，最大缓存100个头像
-QCache<QString, QPixmap> ChatItemWidget::avatarCache(100); // 缓存 100 个头像
+QCache<QString, QPixmap> ChatItemWidget::avatarCache(50); // 缓存 x 个头像
 
 // 构造函数，初始化聊天项控件
 ChatItemWidget::ChatItemWidget(const ChatItemData &data, QWidget *parent)
@@ -25,6 +25,7 @@ ChatItemWidget::ChatItemWidget(const ChatItemData &data, QWidget *parent)
 // 析构函数
 ChatItemWidget::~ChatItemWidget()
 {
+    unloadData(); // 确保销毁时清理缓存
     delete ui;  // 删除UI对象
 }
 
@@ -93,7 +94,10 @@ void ChatItemWidget::unloadData()
 {
     if (!m_isFullyLoaded)  // 如果未加载则直接返回
         return;
-
+    // 移除缓存中的头像
+    if (avatarCache.contains(m_data.avatarPath)) {
+        avatarCache.remove(m_data.avatarPath);
+    }
     ui->m_avatarLabel->setPixmap(QPixmap()); // 清空头像
     ui->m_messageLabel->setText("");  // 清空消息
     ui->m_timeLabel->setText("");  // 清空时间

@@ -3,22 +3,20 @@
 #include "qevent.h"
 
 #include <QScrollBar>
-#include <QDir>
 #include <QRandomGenerator>
 #include <algorithm>
 #include <QDebug>
 
 // 构造函数，初始化聊天列表控件
 ChatListWid::ChatListWid(QWidget *parent)
-    : QListWidget(parent), m_isFastScrolling(false)  // 初始化快速滚动标志为false
+    : QListWidget(parent), m_isFastScrolling(false)
 {
-    initUI();  // 初始化UI
-    // 设置加载定时器（单次触发）
+    initUI();
     m_loadTimer = new QTimer(this);
     m_loadTimer->setSingleShot(true);
-    // 连接定时器超时信号到检查可见项槽函数
+    m_loadTimer->setInterval(50); // 延长定时器间隔
     connect(m_loadTimer, &QTimer::timeout, this, &ChatListWid::checkVisibleItems);
-    // 加载测试数据
+    connect(this, &QListWidget::currentItemChanged, this, &ChatListWid::onCurrentItemChanged);
     loadChatItems(createTestData());
 }
 
@@ -30,66 +28,76 @@ ChatListWid::~ChatListWid()
 // 加载聊天项列表
 void ChatListWid::loadChatItems(const QVector<ChatItemData> &items)
 {
-    clear();  // 清空列表
-    m_chatItems.clear();  // 清空聊天项数据
-    m_loadedItems.clear();  // 清空已加载项索引
-    m_chatItems = items;  // 设置新的聊天项数据
-    sortChatItems();  // 按时间排序
+    clear();
+    m_chatItems.clear();
+    m_loadedItems.clear();
+    m_chatItems = items;
+    sortChatItems();
 
-    // 为每个有效聊天项创建列表项和控件
+    // 只创建QListWidgetItem，不立即创建ChatItemWidget
     for (const ChatItemData &item : m_chatItems) {
         if (item.isValid) {
             QListWidgetItem *listItem = new QListWidgetItem(this);
-            listItem->setSizeHint(QSize(240, 72));  // 设置固定大小
+            listItem->setSizeHint(QSize(240, ITEM_HEIGHT));
             addItem(listItem);
-            ChatItemWidget *widget = new ChatItemWidget(item, this);
-            setItemWidget(listItem, widget);
         }
     }
 
-    // 完全加载前15项（视口可见区域）
-    for (int i = 0; i < qMin(15, count()); ++i) {
-        QListWidgetItem *item = this->item(i);
-        if (item) {
-            ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
-            if (widget && !widget->isFullyLoaded()) {
-                widget->loadFullData();  // 加载完整数据
-                m_loadedItems.insert(i);  // 记录已加载项索引
-            }
-        }
-    }
+    // 初始加载前15项
+    checkVisibleItems();
+}
 
-    checkVisibleItems();  // 检查并加载可见项
+// 创建ChatItemWidget
+void ChatListWid::createChatItemWidget(int index)
+{
+    QListWidgetItem *item = this->item(index);
+    if (!item || itemWidget(item)) // 已存在控件
+        return;
+
+    ChatItemWidget *widget = new ChatItemWidget(m_chatItems[index], this);
+    setItemWidget(item, widget);
+    widget->loadFullData();
+    m_loadedItems.insert(index);
 }
 
 // 检查并加载可见项
 void ChatListWid::checkVisibleItems()
 {
-    QRect viewportRect = viewport()->rect();  // 获取视口矩形
-    // 设置每次检查最多加载的项数（根据是否快速滚动）
+    QRect viewportRect = viewport()->rect();
+    int scrollValue = verticalScrollBar()->value();
+    int startIndex = scrollValue / ITEM_HEIGHT;
+    int endIndex = (scrollValue + viewportRect.height()) / ITEM_HEIGHT + 1;
+    endIndex = qMin(endIndex, count() - 1);
+    startIndex = qMax(0, startIndex - 1); // 预加载上一项
+
     int loadedCount = 0;
     int maxLoad = m_isFastScrolling ? MAX_LOAD_PER_CHECK_FAST : MAX_LOAD_PER_CHECK;
+    QSet<int> currentLoadedItems;
 
-    // 扩展视口范围（上下各72像素）以预加载
-    viewportRect.adjust(0, -72, 0, 72);
-
-    QSet<int> currentLoadedItems;  // 当前已加载项索引集合
-
-    // 遍历所有项
-    for (int i = 0; i < count(); ++i) {
+    // 遍历可见范围
+    for (int i = startIndex; i <= endIndex && i < count(); ++i) {
         QListWidgetItem *item = this->item(i);
         if (!item)
             continue;
 
-        QRect itemRect = visualItemRect(item);  // 获取项的可视矩形
+        // 创建控件（如果尚未创建）
+        if (!itemWidget(item)) {
+            if (loadedCount < maxLoad) {
+                createChatItemWidget(i);
+                currentLoadedItems.insert(i);
+                ++loadedCount;
+            }
+            continue;
+        }
+
         ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
         if (!widget)
             continue;
 
-        // 检查项是否在扩展后的视口内
-        bool isVisible = viewportRect.intersects(itemRect);
+        // 加载或卸载数据
+        QRect itemRect = visualItemRect(item);
+        bool isVisible = viewportRect.intersects(itemRect.adjusted(0, -ITEM_HEIGHT, 0, ITEM_HEIGHT));
         if (isVisible) {
-            // 如果可见且未加载，且未超过最大加载数，则加载
             if (!widget->isFullyLoaded() && loadedCount < maxLoad) {
                 widget->loadFullData();
                 currentLoadedItems.insert(i);
@@ -98,23 +106,42 @@ void ChatListWid::checkVisibleItems()
                 currentLoadedItems.insert(i);
             }
         } else {
-            // 如果不可见且已加载，则卸载
             if (widget->isFullyLoaded()) {
                 widget->unloadData();
+                // 可选：销毁不可见控件以进一步释放内存
+                // setItemWidget(item, nullptr);
+                // delete widget;
             }
         }
     }
 
-    m_loadedItems = currentLoadedItems;  // 更新已加载项集合
-    m_isFastScrolling = false; // 重置快速滚动状态
+    // 卸载其他已加载但不可见的项
+    for (int i : m_loadedItems) {
+        if (!currentLoadedItems.contains(i) && i >= 0 && i < count()) {
+            QListWidgetItem *item = this->item(i);
+            if (item) {
+                ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
+                if (widget && widget->isFullyLoaded()) {
+                    widget->unloadData();
+                    // 可选：销毁控件
+                    // setItemWidget(item, nullptr);
+                    // delete widget;
+                }
+            }
+        }
+    }
+
+    m_loadedItems = currentLoadedItems;
+    m_isFastScrolling = false;
 }
 
 // 视口事件处理
 bool ChatListWid::viewportEvent(QEvent *event)
 {
-    // 在绘制或调整大小时启动加载定时器
     if (event->type() == QEvent::Paint || event->type() == QEvent::Resize) {
-        m_loadTimer->start(5);
+        if (!m_loadTimer->isActive()) {
+            m_loadTimer->start();
+        }
     }
     return QListWidget::viewportEvent(event);
 }
@@ -122,52 +149,52 @@ bool ChatListWid::viewportEvent(QEvent *event)
 // 滚轮事件处理
 void ChatListWid::wheelEvent(QWheelEvent *event)
 {
-    QScrollBar *scrollBar = verticalScrollBar();  // 获取垂直滚动条
+    QScrollBar *scrollBar = verticalScrollBar();
     if (!scrollBar) {
-        event->ignore();
+        QListWidget::wheelEvent(event);
         return;
     }
 
-    // 如果滚动动画正在运行则停止
-    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
-        m_scrollAnimation->stop();
-    }
-
-    // 获取滚动的像素或角度增量
+    int delta = 0;
     QPoint numPixels = event->pixelDelta();
     QPoint numDegrees = event->angleDelta();
-
-    // 计算滚动增量
-    int delta = 0;
     if (!numPixels.isNull()) {
         delta = numPixels.y();
     } else if (!numDegrees.isNull()) {
-        delta = numDegrees.y();
+        delta = numDegrees.y() / 2; // 标准化角度增量
     }
 
-    // 设置滚动动画参数
-    m_targetScrollValue = scrollBar->value() - delta;
-    m_scrollAnimation->setStartValue(scrollBar->value());
-    m_scrollAnimation->setEndValue(m_targetScrollValue);
-    m_scrollAnimation->start();
-
-    // 标记为快速滚动并启动加载定时器
+    scrollBar->setValue(scrollBar->value() - delta);
     m_isFastScrolling = true;
-    m_loadTimer->start(5);
-
+    if (!m_loadTimer->isActive()) {
+        m_loadTimer->start();
+    }
     event->accept();
 }
 
-// 滚动条值改变处理
-void ChatListWid::onScrollBarValueChanged(int value)
+// 当前项改变处理
+void ChatListWid::onCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    if (m_scrollAnimation->state() == QPropertyAnimation::Running) {
-        return;
+    if (previous) {
+        ChatItemWidget *prevWidget = qobject_cast<ChatItemWidget*>(itemWidget(previous));
+        if (prevWidget) {
+            prevWidget->setSelected(false);
+        }
     }
-    m_targetScrollValue = value;
-    m_isFastScrolling = true;  // 标记为快速滚动
-    m_loadTimer->start(5);  // 启动加载定时器
-    viewport()->update();  // 更新视口
+
+    if (current) {
+        if (!itemWidget(current)) {
+            createChatItemWidget(row(current));
+        }
+        ChatItemWidget *currWidget = qobject_cast<ChatItemWidget*>(itemWidget(current));
+        if (currWidget) {
+            currWidget->setSelected(true);
+            if (!currWidget->isFullyLoaded()) {
+                currWidget->loadFullData();
+                m_loadedItems.insert(row(current));
+            }
+        }
+    }
 }
 
 // 按最后消息时间排序聊天项
@@ -175,11 +202,11 @@ void ChatListWid::sortChatItems()
 {
     std::sort(m_chatItems.begin(), m_chatItems.end(),
               [](const ChatItemData &a, const ChatItemData &b) {
-                  return a.lastMessageTime > b.lastMessageTime;  // 降序排序
+                  return a.lastMessageTime > b.lastMessageTime;
               });
 }
 
-// 查找新项的插入位置（按时间排序）
+// 查找新项的插入位置
 int ChatListWid::findInsertPosition(const ChatItemData &data) const
 {
     auto it = std::lower_bound(m_chatItems.begin(), m_chatItems.end(), data,
@@ -192,54 +219,47 @@ int ChatListWid::findInsertPosition(const ChatItemData &data) const
 // 添加聊天项
 void ChatListWid::addChatItem(const ChatItemData &data)
 {
-    if (!data.isValid)  // 如果数据无效则返回
+    if (!data.isValid)
         return;
 
-    // 查找插入位置并插入数据
     int insertIndex = findInsertPosition(data);
     m_chatItems.insert(insertIndex, data);
 
-    // 创建列表项和控件
     QListWidgetItem *item = new QListWidgetItem;
-    item->setSizeHint(QSize(240, 72));
+    item->setSizeHint(QSize(240, ITEM_HEIGHT));
     insertItem(insertIndex, item);
-    ChatItemWidget *widget = new ChatItemWidget(data, this);
-    setItemWidget(item, widget);
 
-    // 如果新项在视口内则加载完整数据
     QRect viewportRect = viewport()->rect();
     QRect itemRect = visualItemRect(item);
     if (viewportRect.intersects(itemRect)) {
-        widget->loadFullData();
-        m_loadedItems.insert(insertIndex);
+        createChatItemWidget(insertIndex);
     }
 }
 
 // 更新聊天项
 void ChatListWid::updateChatItem(int index, const ChatItemData &data)
 {
-    if (index < 0 || index >= count())  // 检查索引有效性
+    if (index < 0 || index >= count())
         return;
 
-    // 如果时间未改变则直接更新数据
     if (index < m_chatItems.size() && m_chatItems[index].lastMessageTime == data.lastMessageTime) {
         m_chatItems[index] = data;
         QListWidgetItem *item = this->item(index);
         if (item) {
             ChatItemWidget *widget = qobject_cast<ChatItemWidget*>(itemWidget(item));
             if (widget) {
-                widget->updateData(data);  // 更新控件数据
-                widget->setSelected(currentRow() == index);  // 更新选中状态
-                // 如果已加载但未完全加载则加载完整数据
+                widget->updateData(data);
+                widget->setSelected(currentRow() == index);
                 if (m_loadedItems.contains(index) && !widget->isFullyLoaded()) {
                     widget->loadFullData();
                 }
+            } else if (m_loadedItems.contains(index)) {
+                createChatItemWidget(index);
             }
         }
         return;
     }
 
-    // 如果时间改变则移除并重新添加
     removeChatItem(index);
     addChatItem(data);
 }
@@ -247,13 +267,13 @@ void ChatListWid::updateChatItem(int index, const ChatItemData &data)
 // 移除聊天项
 void ChatListWid::removeChatItem(int index)
 {
-    if (index < 0 || index >= count())  // 检查索引有效性
+    if (index < 0 || index >= count())
         return;
     if (index < m_chatItems.size())
-        m_chatItems.removeAt(index);  // 从数据中移除
-    m_loadedItems.remove(index);  // 从已加载集合中移除
-    QListWidgetItem *item = takeItem(index);  // 从列表中移除
-    delete item;  // 删除列表项
+        m_chatItems.removeAt(index);
+    m_loadedItems.remove(index);
+    QListWidgetItem *item = takeItem(index);
+    delete item;
 }
 
 // 获取所有聊天项数据
@@ -280,118 +300,92 @@ int ChatListWid::currentChatIndex() const
 void ChatListWid::enterEvent(QEnterEvent *event)
 {
     Q_UNUSED(event);
-    update();  // 更新控件
 }
 
 // 鼠标离开事件
 void ChatListWid::leaveEvent(QEvent *event)
 {
     Q_UNUSED(event);
-    update();  // 更新控件
 }
 
 // 初始化UI
 void ChatListWid::initUI()
 {
-    setFrameShape(QFrame::NoFrame);  // 无边框
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // 禁用水平滚动条
-    setEditTriggers(QAbstractItemView::NoEditTriggers);  // 禁止编辑
-    setSelectionMode(QAbstractItemView::SingleSelection);  // 单选模式
-    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);  // 像素级滚动
+    setFrameShape(QFrame::NoFrame);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
+    setSelectionMode(QAbstractItemView::SingleSelection);
+    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-    // 设置垂直滚动条
     QScrollBar *scrollBar = verticalScrollBar();
     if (scrollBar) {
-        scrollBar->setSingleStep(10);  // 单步滚动量
-        scrollBar->setPageStep(50);  // 页步长
-        // 连接滚动条值改变信号
-        connect(scrollBar, &QScrollBar::valueChanged, this, &ChatListWid::onScrollBarValueChanged);
+        scrollBar->setSingleStep(10);
+        scrollBar->setPageStep(50);
     }
 
-    // 设置滚动动画
-    m_scrollAnimation = new QPropertyAnimation(scrollBar, "value", this);
-    m_scrollAnimation->setDuration(300);  // 动画持续时间
-    m_scrollAnimation->setEasingCurve(QEasingCurve::OutCubic);  // 缓动曲线
-
-    // 设置样式表
     setStyleSheet(
         "QListWidget {"
-        "   background-color: white;"  // 白色背景
-        "   border: none;"  // 无边框
-        "   outline: none;"  // 无轮廓
+        "   background-color: white;"
+        "   border: none;"
+        "   outline: none;"
         "}"
-        "QListWidget::item {"  // 列表项样式
-        "   background-color: white;"  // 白色背景
-        "   border-radius: 4px;"  // 圆角
-        "   margin: 2px 5px;"  // 外边距
+        "QListWidget::item {"
+        "   background-color: white;"
+        "   border-radius: 4px;"
+        "   margin: 2px 5px;"
         "}"
-        "QListWidget::item:selected {"  // 选中项样式
-        "   background-color: #A2A2FE;"  // 浅紫色背景
+        "QListWidget::item:selected {"
+        "   background-color: #A2A2FE;"
         "}"
-        "QListWidget::item:hover:!selected {"  // 悬停项样式
-        "   background-color: #F0F0F0;"  // 浅灰色背景
+        "QListWidget::item:hover:!selected {"
+        "   background-color: #F0F0F0;"
         "}"
-        "QScrollBar:vertical {"  // 垂直滚动条样式
-        "   background: transparent;"  // 透明背景
-        "   width: 4px;"  // 宽度
-        "   margin: 0px 0px 0px 0px;"  // 边距
-        "   border-radius: 4px;"  // 圆角
+        "QScrollBar:vertical {"
+        "   background: transparent;"
+        "   width: 4px;"
+        "   margin: 0px 0px 0px 0px;"
+        "   border-radius: 4px;"
         "}"
-        "QScrollBar:vertical:hover, QListWidget:hover QScrollBar:vertical {"  // 悬停时滚动条样式
-        "   background: #F5F5F5;"  // 浅灰色背景
+        "QScrollBar:vertical:hover, QListWidget:hover QScrollBar:vertical {"
+        "   background: #F5F5F5;"
         "}"
-        "QScrollBar::handle:vertical {"  // 滚动条滑块样式
-        "   background: #C0C0C0;"  // 灰色
-        "   min-height: 20px;"  // 最小高度
-        "   border-radius: 4px;"  // 圆角
+        "QScrollBar::handle:vertical {"
+        "   background: #C0C0C0;"
+        "   min-height: 20px;"
+        "   border-radius: 4px;"
         "}"
-        "QScrollBar::handle:vertical:hover {"  // 悬停时滑块样式
-        "   background: #A0A0A0;"  // 深灰色
+        "QScrollBar::handle:vertical:hover {"
+        "   background: #A0A0A0;"
         "}"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"  // 上下箭头样式
-        "   height: 0px;"  // 高度为0（隐藏）
-        "   background: none;"  // 无背景
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {"
+        "   height: 0px;"
+        "   background: none;"
         "}"
-        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {"  // 滑块外区域样式
-        "   background: none;"  // 无背景
+        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {"
+        "   background: none;"
         "}"
         );
-
-    // 连接当前项改变信号
-    connect(this, &QListWidget::currentItemChanged, [this](QListWidgetItem *current, QListWidgetItem *previous) {
-        if (previous) {  // 前一个选中项
-            QWidget *prevWidget = itemWidget(previous);
-            if (prevWidget) {
-                ChatItemWidget *prevChatWidget = qobject_cast<ChatItemWidget*>(prevWidget);
-                if (prevChatWidget) {
-                    prevChatWidget->setSelected(false);  // 取消选中状态
-                }
-            }
-        }
-
-        if (current) {  // 当前选中项
-            QWidget *currWidget = itemWidget(current);
-            if (currWidget) {
-                ChatItemWidget *currChatWidget = qobject_cast<ChatItemWidget*>(currWidget);
-                if (currChatWidget) {
-                    currChatWidget->setSelected(true);  // 设置选中状态
-                    // 如果未完全加载则加载完整数据
-                    if (!currChatWidget->isFullyLoaded()) {
-                        currChatWidget->loadFullData();
-                        m_loadedItems.insert(this->row(current));  // 记录已加载
-                    }
-                }
-            }
-        }
-    });
 }
 
 // 创建测试数据
 QVector<ChatItemData> ChatListWid::createTestData()
 {
-    QVector<ChatItemData> testData;
-    testData.reserve(100);
+    // 配置变量 - 只需修改这些变量即可调整数据模拟量
+    const int TOTAL_COUNT = 10000;          // 总数据量
+    const int INDIVIDUAL_RATIO = 60;        // 个人聊天占比（百分比）
+    const int GROUP_RATIO = 40;             // 群聊占比（百分比）
+    const int MAX_UNREAD_INDIVIDUAL = 20;    // 个人聊天最大未读数
+    const int MAX_UNREAD_GROUP = 150;        // 群聊最大未读数
+    const int MUTE_PROB_INDIVIDUAL = 10;     // 个人聊天静音概率（百分比）
+    const int MUTE_PROB_GROUP = 30;          // 群聊静音概率（百分比）
+    const int UNREAD_PROB_INDIVIDUAL = 30;   // 个人聊天有未读消息概率（百分比）
+    const int UNREAD_PROB_GROUP = 60;        // 群聊有未读消息概率（百分比）
+    const int SENDER_PROB = 50;              // 显示发送者概率（百分比）
 
+    QVector<ChatItemData> testData;
+    testData.reserve(TOTAL_COUNT);
+
+    // 静态数据配置
     QStringList avatarPaths = {
         ":/LogReg/avatars/avatar1.png",
         ":/LogReg/avatars/avatar2.png",
@@ -401,22 +395,9 @@ QVector<ChatItemData> ChatListWid::createTestData()
         ":/LogReg/avatars/avatar6.png",
     };
 
-    QStringList names;
     QStringList surnames = {"赵","钱","孙","李","周","吴","郑","王","冯","陈","褚","卫","蒋","沈","韩","杨"};
     QStringList givenNames = {"伟","芳","娜","秀英","敏","静","丽","强","磊","军","洋","勇","艳","杰","娟","涛"};
     QStringList groupSuffixes = {"交流群","讨论组","粉丝群","亲友团","同学会","工作群","项目组","游戏群"};
-
-    for (int i = 0; i < 60; ++i) {
-        names.append(surnames[QRandomGenerator::global()->bounded(surnames.size())] +
-                     givenNames[QRandomGenerator::global()->bounded(givenNames.size())]);
-    }
-
-    for (int i = 0; i < 40; ++i) {
-        QString name = surnames[QRandomGenerator::global()->bounded(surnames.size())] +
-                       givenNames[QRandomGenerator::global()->bounded(givenNames.size())] +
-                       "的" + groupSuffixes[QRandomGenerator::global()->bounded(groupSuffixes.size())];
-        names.append(name);
-    }
 
     QStringList messageTemplates = {
         "你吃饭了吗？",
@@ -441,28 +422,52 @@ QVector<ChatItemData> ChatListWid::createTestData()
         "记得带身份证"
     };
 
+    // 预生成名称列表
+    QStringList names;
+    int individualCount = TOTAL_COUNT * INDIVIDUAL_RATIO / 100;
+    int groupCount = TOTAL_COUNT * GROUP_RATIO / 100;
+
+    for (int i = 0; i < individualCount; ++i) {
+        names.append(surnames[QRandomGenerator::global()->bounded(surnames.size())] +
+                     givenNames[QRandomGenerator::global()->bounded(givenNames.size())]);
+    }
+
+    for (int i = 0; i < groupCount; ++i) {
+        QString name = surnames[QRandomGenerator::global()->bounded(surnames.size())] +
+                       givenNames[QRandomGenerator::global()->bounded(givenNames.size())] +
+                       "的" + groupSuffixes[QRandomGenerator::global()->bounded(groupSuffixes.size())];
+        names.append(name);
+    }
+
+    // 生成测试数据
     QDateTime now = QDateTime::currentDateTime();
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < TOTAL_COUNT; ++i) {
         ChatItemData item;
         item.id = i + 1;
         item.avatarPath = avatarPaths[i % avatarPaths.size()];
-        int randomMinutes = QRandomGenerator::global()->bounded(43200);
+        int randomMinutes = QRandomGenerator::global()->bounded(43200); // 30天内随机时间
         item.lastMessageTime = now.addSecs(-randomMinutes * 60);
         item.name = names[i];
 
-        if (QRandomGenerator::global()->bounded(100) < 50 && !item.name.contains("群")) {
-            QString sender = names[QRandomGenerator::global()->bounded(60)] + ": ";
+        bool isGroup = item.name.contains("群");
+
+        // 生成最后一条消息
+        if (QRandomGenerator::global()->bounded(100) < SENDER_PROB && !isGroup) {
+            QString sender = names[QRandomGenerator::global()->bounded(individualCount)] + ": ";
             item.lastMessage = sender + messageTemplates[QRandomGenerator::global()->bounded(messageTemplates.size())];
         } else {
             item.lastMessage = messageTemplates[QRandomGenerator::global()->bounded(messageTemplates.size())];
         }
 
-        bool isGroup = item.name.contains("群");
-        if (QRandomGenerator::global()->bounded(100) < (isGroup ? 60 : 30)) {
-            item.unreadCount = QRandomGenerator::global()->bounded(1, isGroup ? 150 : 20);
+        // 生成未读消息数
+        if (QRandomGenerator::global()->bounded(100) < (isGroup ? UNREAD_PROB_GROUP : UNREAD_PROB_INDIVIDUAL)) {
+            item.unreadCount = QRandomGenerator::global()->bounded(1, isGroup ? MAX_UNREAD_GROUP : MAX_UNREAD_INDIVIDUAL);
+        } else {
+            item.unreadCount = 0;
         }
 
-        item.muted = QRandomGenerator::global()->bounded(100) < (isGroup ? 30 : 10);
+        // 设置静音状态
+        item.muted = QRandomGenerator::global()->bounded(100) < (isGroup ? MUTE_PROB_GROUP : MUTE_PROB_INDIVIDUAL);
         item.isValid = true;
         testData.append(item);
     }

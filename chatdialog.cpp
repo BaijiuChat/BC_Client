@@ -20,7 +20,7 @@ ChatDialog::ChatDialog(QWidget *parent)
 
     // 添加测试消息
     MessageItemData msg1(1, 1, "User1", ":/LogReg/avatars/avatar1.png", "Hello!", QDateTime::currentDateTime(), false, MessageItemData::Text);
-    MessageItemData msg2(2, 2, "Me", ":/LogReg/avatars/avatar2.png", "Hi there!", QDateTime::currentDateTime(), true, MessageItemData::Text);
+    MessageItemData msg2(2, 2, "Me", ":/LogReg/avatars/avatar2.png", "你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好!", QDateTime::currentDateTime(), true, MessageItemData::Text);
     messageModel->addMessage(msg1);
     messageModel->addMessage(msg2);
 

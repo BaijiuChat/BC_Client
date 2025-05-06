@@ -554,7 +554,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QListView" name="messageListView"/>
+       <widget class="MessageListView" name="messageListView">
+        <property name="verticalScrollMode">
+         <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QWidget" name="msgWid" native="true">
@@ -844,6 +848,11 @@
    <class>ChatListWid</class>
    <extends>QListWidget</extends>
    <header>chatlistwid.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MessageListView</class>
+   <extends>QListView</extends>
+   <header>messagelistview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

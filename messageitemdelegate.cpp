@@ -1,4 +1,5 @@
 #include "MessageItemDelegate.h"
+#include "qpainterpath.h"
 #include <QPainter>
 #include <QFontMetrics>
 #include <QPixmap>
@@ -17,8 +18,8 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     // 计算布局
     QRect rect = option.rect;
-    int x = rect.x() + MARGIN;
-    int y = rect.y() + MARGIN;
+    int x = rect.x();
+    int y = rect.y();
     int width = rect.width() - 2 * MARGIN;
 
     // 头像位置
@@ -29,70 +30,73 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
         avatarRect = QRect(x, y, AVATAR_SIZE, AVATAR_SIZE);
     }
 
-    // 计算文本区域
-    int bubbleMaxWidth = width - AVATAR_SIZE - 4 * MARGIN;
-    QFontMetrics fm(painter->font());
-    QRect textRect = fm.boundingRect(QRect(0, 0, bubbleMaxWidth, 0),
-                                     Qt::AlignLeft | Qt::TextWordWrap,
-                                     data.content);
+    // 设置发送者名字和时间戳的字体（8号字体）
+    QFont nameFont = painter->font();
+    nameFont.setPointSize(8); // 固定为 8 号字体
+    painter->setFont(nameFont);
+    QFontMetrics nameFm(nameFont);
 
-    // 消息气泡区域 - 根据文本内容适当调整大小
+    // 计算文本区域 - 设置最大宽度限制
+    int maxBubbleWidth = option.rect.width() * 0.8; // 设置为 option.rect.width() * 0.8
+    int bubbleMaxWidth = qMin(width - AVATAR_SIZE - 4 * MARGIN, maxBubbleWidth);
+
+    // 设置气泡文字的字体（11号字体，细体）
+    QFont bubbleFont = painter->font();
+    bubbleFont.setPointSize(11);
+    bubbleFont.setWeight(QFont::Light);
+    QFontMetrics bubbleFm(bubbleFont);
+    QRect textRect = bubbleFm.boundingRect(QRect(0, 0, bubbleMaxWidth, 0),
+                                           Qt::AlignLeft | Qt::TextWordWrap,
+                                           data.content);
+
+    // 消息气泡区域 - 增大内边距
     QRect bubbleRect = textRect;
-    bubbleRect.adjust(-MARGIN, -MARGIN, MARGIN, MARGIN);
+    bubbleRect.adjust(-MARGIN, -MARGIN, MARGIN, MARGIN); // 增大内边距
 
     // 绘制头像
     drawAvatar(painter, avatarRect, data.avatarPath);
 
-    // 绘制用户名 - 调整位置使其紧贴气泡
-    QFont font = painter->font();
-    font.setBold(true);
-    painter->setFont(font);
+    // 绘制用户名（使用8号字体，不加粗）
+    painter->setFont(nameFont);
 
     QRect nameRect;
     if (data.isSelf) {
         nameRect = QRect(rect.right() - AVATAR_SIZE - MARGIN - bubbleRect.width() - MARGIN,
-                         y, bubbleRect.width(), fm.height());
+                         y, bubbleRect.width(), nameFm.height());
         painter->drawText(nameRect, Qt::AlignRight, data.senderName);
     } else {
         nameRect = QRect(x + AVATAR_SIZE + MARGIN, y,
-                         bubbleRect.width(), fm.height());
+                         bubbleRect.width(), nameFm.height());
         painter->drawText(nameRect, Qt::AlignLeft, data.senderName);
     }
 
-    // 恢复普通字体
-    font.setBold(false);
-    painter->setFont(font);
-
-    // 时间戳
+    // 时间戳（使用8号字体）
+    nameFont.setBold(false);
+    painter->setFont(nameFont);
     QString timeStr = data.sendTime.toString("hh:mm");
-    int timeWidth = fm.horizontalAdvance(timeStr);
+    int timeWidth = nameFm.horizontalAdvance(timeStr);
     QRect timeRect;
 
     // 调整气泡和时间戳位置
     if (data.isSelf) {
-        // 右对齐布局
         bubbleRect.moveTopRight(QPoint(rect.right() - AVATAR_SIZE - 2 * MARGIN,
-                                       nameRect.bottom() + MARGIN / 2));
-
-        // 时间戳在气泡左侧
-        timeRect = QRect(bubbleRect.left() - timeWidth - MARGIN,
-                         bubbleRect.bottom() - fm.height(),
-                         timeWidth, fm.height());
+                                       nameRect.bottom()));
+        timeRect = QRect(bubbleRect.left() - timeWidth - MARGIN / 2,
+                         bubbleRect.bottom() - nameFm.height(),
+                         timeWidth, nameFm.height());
     } else {
-        // 左对齐布局
         bubbleRect.moveTopLeft(QPoint(x + AVATAR_SIZE + MARGIN,
-                                      nameRect.bottom() + MARGIN / 2));
-
-        // 时间戳在气泡右侧
-        timeRect = QRect(bubbleRect.right() + MARGIN,
-                         bubbleRect.bottom() - fm.height(),
-                         timeWidth, fm.height());
+                                      nameRect.bottom()));
+        timeRect = QRect(bubbleRect.right() + MARGIN / 2,
+                         bubbleRect.bottom() - nameFm.height(),
+                         timeWidth, nameFm.height());
     }
 
     // 绘制消息气泡
     drawMessageBubble(painter, bubbleRect, data.content, data.isSelf);
 
     // 绘制时间戳
+    painter->setFont(nameFont);
     painter->drawText(timeRect, data.isSelf ? Qt::AlignRight : Qt::AlignLeft, timeStr);
 
     painter->restore();
@@ -100,38 +104,57 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
 QSize MessageItemDelegate::sizeHint(const QStyleOptionViewItem &option,
                                     const QModelIndex &index) const {
-    // 获取消息数据
     const MessageItemData data = index.data(Qt::UserRole).value<MessageItemData>();
 
-    // 计算高度
-    QFontMetrics fm(option.font);
-    int bubbleMaxWidth = option.rect.width() - 2 * MARGIN - AVATAR_SIZE - 4 * MARGIN;
+    // 使用11号字体计算气泡高度
+    QFont bubbleFont = option.font;
+    bubbleFont.setPointSize(11);
+    bubbleFont.setWeight(QFont::Light);
+    QFontMetrics bubbleFm(bubbleFont);
 
-    // 用户名高度
-    int nameHeight = fm.height();
+    // 使用相同的宽度限制计算
+    int maxBubbleWidth = option.rect.width() * 0.8; // 设置为 option.rect.width() * 0.8
+    int bubbleMaxWidth = qMin(option.rect.width() - 2 * MARGIN - AVATAR_SIZE - 4 * MARGIN, maxBubbleWidth);
 
-    // 消息文本高度
-    QRect textRect = fm.boundingRect(QRect(0, 0, bubbleMaxWidth, 0),
-                                     Qt::AlignLeft | Qt::TextWordWrap,
-                                     data.content);
+    QRect textRect = bubbleFm.boundingRect(QRect(0, 0, bubbleMaxWidth, 0),
+                                           Qt::AlignLeft | Qt::TextWordWrap,
+                                           data.content);
 
-    // 总高度 = 头像高度 或 (用户名高度 + 气泡高度 + 间距)，取较大值
-    int contentHeight = nameHeight + MARGIN/2 + textRect.height() + MARGIN * 2;
-    int height = qMax(AVATAR_SIZE, contentHeight) + 2 * MARGIN;
+    // 使用8号字体计算名字高度
+    QFont nameFont = option.font;
+    nameFont.setPointSize(8);
+    // QFontMetrics nameFm(nameFont);
+    // int nameHeight = nameFm.height();
 
+    // 计算总高度（考虑增大内边距）
+    int height = AVATAR_SIZE + textRect.height(); // 加上内边距
     return QSize(option.rect.width(), height);
 }
 
 void MessageItemDelegate::drawAvatar(QPainter *painter, const QRect &rect,
                                      const QString &avatarPath) const {
+    painter->save(); // 保存当前painter状态
+    painter->setRenderHint(QPainter::Antialiasing, true); // 确保抗锯齿
+
     QPixmap avatar(avatarPath);
     if (!avatar.isNull()) {
         avatar = avatar.scaled(rect.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        // 创建圆形裁剪路径
+        QPainterPath path;
+        path.addEllipse(rect);
+        painter->setClipPath(path);
+
+        // 绘制头像（会被裁剪为圆形）
         painter->drawPixmap(rect, avatar);
     } else {
+        // 绘制默认圆形头像
         painter->setBrush(Qt::gray);
+        painter->setPen(Qt::NoPen);
         painter->drawEllipse(rect);
     }
+
+    painter->restore(); // 恢复painter状态
 }
 
 void MessageItemDelegate::drawMessageBubble(QPainter *painter, const QRect &rect,
@@ -141,7 +164,13 @@ void MessageItemDelegate::drawMessageBubble(QPainter *painter, const QRect &rect
     painter->setPen(Qt::NoPen);
     painter->drawRoundedRect(rect, BUBBLE_RADIUS, BUBBLE_RADIUS);
 
-    // 绘制文本
+    // 设置字体（11号，细体）
+    QFont font = painter->font();
+    font.setPointSize(11);
+    font.setWeight(QFont::Light);
+    painter->setFont(font);
+
+    // 绘制文本 - 增大内边距
     painter->setPen(Qt::black);
     painter->drawText(rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN),
                       Qt::AlignLeft | Qt::TextWordWrap, content);

@@ -19,6 +19,7 @@ SOURCES += \
     mainwindow.cpp \
     messageitemdelegate.cpp \
     messagelistmodel.cpp \
+    messagelistview.cpp \
     registerdialog.cpp \
     resetdialog.cpp \
     tcpmgr.cpp \
@@ -37,6 +38,7 @@ HEADERS += \
     messageitemdata.h \
     messageitemdelegate.h \
     messagelistmodel.h \
+    messagelistview.h \
     registerdialog.h \
     resetdialog.h \
     singleton.h \

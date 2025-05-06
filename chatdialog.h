@@ -4,6 +4,8 @@
 #include <QDialog>
 #include "global.h"
 #include <QTimer>
+#include "MessageListModel.h"
+#include "MessageItemDelegate.h"
 
 namespace Ui {
 class ChatDialog;
@@ -19,10 +21,12 @@ public:
 
 private:
     Ui::ChatDialog *ui;
-    QAction *searchIcon/*, clearButton*/;
+    QAction *searchIcon;
     ChatUIMode _mode;
     ChatUIMode _state;
-    QTimer* searchTimer;  // 防抖定时器
+    QTimer* searchTimer;         // 防抖定时器
+    MessageListModel *messageModel; // 消息模型
+    MessageItemDelegate *messageDelegate; // 消息绘制代理
 
     void setupNavigation();
     void initSearchSystem();

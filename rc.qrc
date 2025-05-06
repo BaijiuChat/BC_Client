@@ -14,11 +14,11 @@
         <file>res/search.png</file>
         <file>res/x.png</file>
         <file>avatars/avatar1.png</file>
-        <file>avatars/avatar2.jpg</file>
         <file>avatars/avatar3.png</file>
         <file>avatars/avatar4.png</file>
         <file>avatars/avatar5.png</file>
         <file>avatars/avatar6.png</file>
         <file>avatars/default_avatar.png</file>
+        <file>avatars/avatar2.png</file>
     </qresource>
 </RCC>

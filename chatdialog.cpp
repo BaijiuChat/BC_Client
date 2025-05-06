@@ -9,17 +9,25 @@ ChatDialog::ChatDialog(QWidget *parent)
     , _state(ChatUIMode::ChatMode)
 {
     ui->setupUi(this);
+
+    // 初始化消息模型和代理
+    messageModel = new MessageListModel(this);
+    messageDelegate = new MessageItemDelegate(this);
+    ui->messageListView->setModel(messageModel);
+    ui->messageListView->setItemDelegate(messageDelegate);
+    ui->messageListView->setEditTriggers(QAbstractItemView::NoEditTriggers); // 禁用编辑
+    ui->messageListView->setSpacing(5); // item 间距
+
+    // 添加测试消息
+    MessageItemData msg1(1, 1, "User1", ":/LogReg/avatars/avatar1.png", "Hello!", QDateTime::currentDateTime(), false, MessageItemData::Text);
+    MessageItemData msg2(2, 2, "Me", ":/LogReg/avatars/avatar2.png", "Hi there!", QDateTime::currentDateTime(), true, MessageItemData::Text);
+    messageModel->addMessage(msg1);
+    messageModel->addMessage(msg2);
+
     // 设置图标
     setupNavigation();
     // 搜索的信号与槽
     initSearchSystem();
-    // 点击清除按钮（弃用）
-    // connect(clearButton, &QAction::triggered, [=](){
-    //     ui->searchEdit->clear();
-    //     ui->searchListWid->hide();
-    //     ui->chatListWid->show();
-    //     ui->searchEdit->clearFocus();
-    // });
 }
 
 void ChatDialog::setupNavigation()
@@ -38,9 +46,6 @@ void ChatDialog::setupNavigation()
     ui->searchEdit->addAction(searchIcon, QLineEdit::LeadingPosition);
     // 右侧清除按钮（初始隐藏）
     ui->searchEdit->setClearButtonEnabled(true);
-    // clearButton = new QAction(QIcon(":/LogReg/res/x.png"), "清除", ui->searchEdit);
-    // ui->searchEdit->addAction(clearButton, QLineEdit::TrailingPosition);
-    // clearButton->setVisible(false);  //弃用
     // 顶部
     ui->addButton->setIcon(QIcon(":/LogReg/res/plus.png"));
     ui->callButton->setIcon(QIcon(":/LogReg/res/call.png"));
@@ -80,13 +85,6 @@ void ChatDialog::initSearchSystem() {
         // 触发防抖搜索
         searchTimer->start();
     });
-
-    // 防抖搜索逻辑
-    // connect(searchTimer, &QTimer::timeout, [=](){
-    //     if(_mode == ChatUIMode::SearchMode) {
-    //         refreshSearchList(ui->searchEdit->text());
-    //     }
-    // });
 }
 
 ChatDialog::~ChatDialog()

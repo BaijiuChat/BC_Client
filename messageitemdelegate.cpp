@@ -18,16 +18,19 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     // 计算布局
     QRect rect = option.rect;
-    int x = rect.x();
-    int y = rect.y();
-    int width = rect.width() - 2 * MARGIN;
+
+    // 减小右侧边距，使消息更靠近右侧
+    int x = rect.x() + MARGIN; // 从左侧增加偏移
+    int rightMargin = MARGIN / 2; // 减小右侧边距，原来是MARGIN
+    int width = rect.width() - x - rightMargin; // 调整可用宽度
 
     // 头像位置
     QRect avatarRect;
     if (data.isSelf) {
-        avatarRect = QRect(rect.right() - MARGIN - AVATAR_SIZE, y, AVATAR_SIZE, AVATAR_SIZE);
+        // 让自己的头像更靠近右边
+        avatarRect = QRect(rect.right() - rightMargin - AVATAR_SIZE, rect.y(), AVATAR_SIZE, AVATAR_SIZE);
     } else {
-        avatarRect = QRect(x, y, AVATAR_SIZE, AVATAR_SIZE);
+        avatarRect = QRect(x, rect.y(), AVATAR_SIZE, AVATAR_SIZE);
     }
 
     // 设置发送者名字和时间戳的字体（8号字体）
@@ -36,9 +39,9 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     painter->setFont(nameFont);
     QFontMetrics nameFm(nameFont);
 
-    // 计算文本区域 - 设置最大宽度限制
-    int maxBubbleWidth = option.rect.width() * 0.8; // 设置为 option.rect.width() * 0.8
-    int bubbleMaxWidth = qMin(width - AVATAR_SIZE - 4 * MARGIN, maxBubbleWidth);
+    // 计算文本区域 - 设置最大宽度限制并增加宽度
+    int maxBubbleWidth = option.rect.width() * 0.8; // 增加最大宽度比例，原来是0.8
+    int bubbleMaxWidth = qMin(width - AVATAR_SIZE - 3 * MARGIN, maxBubbleWidth); // 减少边距计算，原来是4*MARGIN
 
     // 设置气泡文字的字体（11号字体，细体）
     QFont bubbleFont = painter->font();
@@ -61,11 +64,11 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     QRect nameRect;
     if (data.isSelf) {
-        nameRect = QRect(rect.right() - AVATAR_SIZE - MARGIN - bubbleRect.width() - MARGIN,
-                         y, bubbleRect.width(), nameFm.height());
+        nameRect = QRect(rect.right() - rightMargin - AVATAR_SIZE - bubbleRect.width() - MARGIN,
+                         rect.y(), bubbleRect.width(), nameFm.height());
         painter->drawText(nameRect, Qt::AlignRight, data.senderName);
     } else {
-        nameRect = QRect(x + AVATAR_SIZE + MARGIN, y,
+        nameRect = QRect(x + AVATAR_SIZE + MARGIN, rect.y(),
                          bubbleRect.width(), nameFm.height());
         painter->drawText(nameRect, Qt::AlignLeft, data.senderName);
     }
@@ -77,9 +80,9 @@ void MessageItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     int timeWidth = nameFm.horizontalAdvance(timeStr);
     QRect timeRect;
 
-    // 调整气泡和时间戳位置
+    // 调整气泡和时间戳位置，减小右侧边距
     if (data.isSelf) {
-        bubbleRect.moveTopRight(QPoint(rect.right() - AVATAR_SIZE - 2 * MARGIN,
+        bubbleRect.moveTopRight(QPoint(rect.right() - rightMargin - AVATAR_SIZE - MARGIN,
                                        nameRect.bottom()));
         timeRect = QRect(bubbleRect.left() - timeWidth - MARGIN / 2,
                          bubbleRect.bottom() - nameFm.height(),
@@ -112,9 +115,10 @@ QSize MessageItemDelegate::sizeHint(const QStyleOptionViewItem &option,
     bubbleFont.setWeight(QFont::Light);
     QFontMetrics bubbleFm(bubbleFont);
 
-    // 使用相同的宽度限制计算
-    int maxBubbleWidth = option.rect.width() * 0.8; // 设置为 option.rect.width() * 0.8
-    int bubbleMaxWidth = qMin(option.rect.width() - 2 * MARGIN - AVATAR_SIZE - 4 * MARGIN, maxBubbleWidth);
+    // 使用相同的宽度限制计算，增加宽度比例
+    int maxBubbleWidth = option.rect.width() * 0.8; // 增加宽度比例，与paint方法保持一致
+    int width = option.rect.width();
+    int bubbleMaxWidth = qMin(width - AVATAR_SIZE - 3 * MARGIN, maxBubbleWidth); // 减少边距计算
 
     QRect textRect = bubbleFm.boundingRect(QRect(0, 0, bubbleMaxWidth, 0),
                                            Qt::AlignLeft | Qt::TextWordWrap,
@@ -126,8 +130,8 @@ QSize MessageItemDelegate::sizeHint(const QStyleOptionViewItem &option,
     // QFontMetrics nameFm(nameFont);
     // int nameHeight = nameFm.height();
 
-    // 计算总高度（考虑增大内边距）
-    int height = AVATAR_SIZE + textRect.height(); // 加上内边距
+    // 计算总高度
+    int height = AVATAR_SIZE + textRect.height();
     return QSize(option.rect.width(), height);
 }
 

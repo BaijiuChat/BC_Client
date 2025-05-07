@@ -555,6 +555,9 @@
       </item>
       <item>
        <widget class="MessageListView" name="messageListView">
+        <property name="autoScroll">
+         <bool>false</bool>
+        </property>
         <property name="verticalScrollMode">
          <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
         </property>

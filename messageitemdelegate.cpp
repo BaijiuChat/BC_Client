@@ -210,7 +210,6 @@ void MessageItemDelegate::drawMessageBubble(QPainter *painter, const QRect &rect
 
     // 绘制文本 - 减小底部内边距
     painter->setPen(Qt::black);
-    // 修改这里：顶部保持原有间距，底部减少内边距
     painter->drawText(rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN),
                       Qt::AlignLeft | Qt::TextWordWrap, content);
 }

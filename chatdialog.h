@@ -33,6 +33,11 @@ private:
 
     void setupNavigation();
     void initSearchSystem();
+
+    // 测试数据生成相关函数
+    QString generateRandomText(int maxWords = 30);
+    QDateTime generateRandomDateTime();
+    void generateTestMessages(int count = 10000);
 };
 
 #endif // CHATDIALOG_H

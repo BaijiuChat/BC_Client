@@ -1,6 +1,7 @@
 #include "chatdialog.h"
 #include "ui_chatdialog.h"
 #include <QAction>
+#include <QRandomGenerator64>
 
 ChatDialog::ChatDialog(QWidget *parent)
     : QDialog(parent)
@@ -26,13 +27,8 @@ ChatDialog::ChatDialog(QWidget *parent)
     ui->messageListView->setUniformItemSizes(false);             // 每个 item 可以有不同高度
     ui->messageListView->setResizeMode(QListView::Adjust);       // 自动根据内容大小重新布局
 
-    // 添加测试消息
-    MessageItemData msg1(1, 1, "User1", ":/LogReg/avatars/avatar1.png", "Hello!", QDateTime::currentDateTime(), false, MessageItemData::Text);
-    MessageItemData msg2(2, 2, "Me", ":/LogReg/avatars/avatar2.png", "你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好!", QDateTime::currentDateTime(), true, MessageItemData::Text);
-    MessageItemData msg3(3, 3, "User2", ":/LogReg/avatars/avatar3.png", "你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好你好!", QDateTime::currentDateTime(), false, MessageItemData::Text);
-    messageModel->addMessage(msg1);
-    messageModel->addMessage(msg2);
-    messageModel->addMessage(msg3);
+    // 生成测试数据（默认10000条）
+    generateTestMessages(10000);
 
     // 设置图标
     setupNavigation();
@@ -44,6 +40,84 @@ void ChatDialog::resizeEvent(QResizeEvent *event) {
     // 更新 viewportWidth 当窗口大小变化时
     ui->messageListView->setProperty("viewportWidth", ui->messageListView->viewport()->width());
     QDialog::resizeEvent(event); // 调用父类实现
+}
+
+// 生成随机文本
+QString ChatDialog::generateRandomText(int maxWords)
+{
+    static const QStringList wordPool = {
+        "你好", "Hello", "今天天气不错", "What's up?", "最近怎么样",
+        "I'm fine", "谢谢", "Thank you", "这个项目很有趣", "This is a test",
+        "我们可以聊聊", "Let's discuss", "明天见", "See you tomorrow",
+        "代码写得不错", "Good code", "Qt很好用", "Qt is powerful",
+        "随机消息", "Random message", "测试数据", "Test data",
+        "中文", "English", "混合", "Mixed", "消息", "Message"
+    };
+
+    QString result;
+    int wordCount = QRandomGenerator::global()->bounded(1, maxWords);
+
+    for (int i = 0; i < wordCount; ++i) {
+        int index = QRandomGenerator::global()->bounded(wordPool.size());
+        result += wordPool.at(index);
+
+        // 随机添加空格或标点
+        int punctuation = QRandomGenerator::global()->bounded(10);
+        if (punctuation < 2) result += "。";
+        else if (punctuation < 4) result += "！";
+        else if (punctuation < 6) result += "？";
+        else result += " ";
+    }
+
+    return result.trimmed();
+}
+
+// 生成随机时间（覆盖去年、上个月、昨天和今天）
+QDateTime ChatDialog::generateRandomDateTime()
+{
+    QDateTime now = QDateTime::currentDateTime();
+    int timeType = QRandomGenerator::global()->bounded(100);
+
+    if (timeType < 5) { // 5% 去年
+        return now.addYears(-1).addSecs(QRandomGenerator::global()->bounded(31536000));
+    } else if (timeType < 20) { // 15% 上个月
+        return now.addMonths(-1).addSecs(QRandomGenerator::global()->bounded(2592000));
+    } else if (timeType < 40) { // 20% 昨天
+        return now.addDays(-1).addSecs(QRandomGenerator::global()->bounded(86400));
+    } else { // 60% 今天
+        return now.addSecs(QRandomGenerator::global()->bounded(86400));
+    }
+}
+
+// 生成测试消息
+void ChatDialog::generateTestMessages(int count)
+{
+    // 清空现有消息
+    // messageModel->clear();
+
+    // 生成指定数量的测试消息
+    for (int i = 0; i < count; ++i) {
+        int senderId = QRandomGenerator::global()->bounded(1, 7); // 1-6
+        bool isSelf = (senderId == 2); // 假设id为2的是自己
+
+        MessageItemData msg(
+            i + 1, // messageId
+            senderId, // senderId
+            QString("用户%1").arg(senderId), // senderName
+            QString(":/LogReg/avatars/avatar%1.png").arg(senderId), // avatarPath
+            generateRandomText(), // content
+            generateRandomDateTime(), // sendTime
+            isSelf, // isSelf
+            MessageItemData::Text // type
+            );
+
+        messageModel->addMessage(msg);
+
+        // 每生成1000条消息时更新UI（防止界面卡死）
+        if (i % 1000 == 0) {
+            QCoreApplication::processEvents();
+        }
+    }
 }
 
 void ChatDialog::setupNavigation()

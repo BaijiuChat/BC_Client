@@ -349,7 +349,11 @@
        </widget>
       </item>
       <item>
-       <widget class="ChatListWid" name="chatListWid"/>
+       <widget class="ChatListWid" name="chatListWid">
+        <property name="autoScroll">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QListWidget" name="searchListWid"/>

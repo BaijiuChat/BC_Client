@@ -19,6 +19,9 @@ public:
     explicit ChatDialog(QWidget *parent = nullptr);
     ~ChatDialog();
 
+protected:
+    void resizeEvent(QResizeEvent *event) override; // 重写 resizeEvent
+
 private:
     Ui::ChatDialog *ui;
     QAction *searchIcon;

@@ -16,7 +16,15 @@ ChatDialog::ChatDialog(QWidget *parent)
     ui->messageListView->setModel(messageModel);
     ui->messageListView->setItemDelegate(messageDelegate);
     ui->messageListView->setEditTriggers(QAbstractItemView::NoEditTriggers); // 禁用编辑
-    ui->messageListView->setSpacing(5); // item 间距
+    // ui->messageListView->setSpacing(5); // item 间距
+
+    // 初始化时设置 viewportWidth
+    ui->messageListView->setProperty("viewportWidth", ui->messageListView->viewport()->width());
+
+    // 设置 QListView 参数
+    ui->messageListView->setWordWrap(true);                      // 启用自动换行
+    ui->messageListView->setUniformItemSizes(false);             // 每个 item 可以有不同高度
+    ui->messageListView->setResizeMode(QListView::Adjust);       // 自动根据内容大小重新布局
 
     // 添加测试消息
     MessageItemData msg1(1, 1, "User1", ":/LogReg/avatars/avatar1.png", "Hello!", QDateTime::currentDateTime(), false, MessageItemData::Text);
@@ -30,6 +38,12 @@ ChatDialog::ChatDialog(QWidget *parent)
     setupNavigation();
     // 搜索的信号与槽
     initSearchSystem();
+}
+
+void ChatDialog::resizeEvent(QResizeEvent *event) {
+    // 更新 viewportWidth 当窗口大小变化时
+    ui->messageListView->setProperty("viewportWidth", ui->messageListView->viewport()->width());
+    QDialog::resizeEvent(event); // 调用父类实现
 }
 
 void ChatDialog::setupNavigation()
